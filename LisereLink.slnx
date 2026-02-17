@@ -1,7 +1,7 @@
 <Solution>
-  <Project Path="runapp.client/liserelink.client.esproj">
+  <Project Path="liserelink.client/liserelink.client.esproj">
     <Build />
     <Deploy />
   </Project>
-  <Project Path="RunApp.Server/LisereLink.Server.csproj" />
+  <Project Path="LisereLink.Server/LisereLink.Server.csproj" />
 </Solution>
