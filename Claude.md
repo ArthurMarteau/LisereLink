@@ -87,9 +87,9 @@ Defined in `SPECS.md`. Summary:
 - `RequestStatus`: Pending, InProgress, Delivered, Unavailable, Cancelled
 - `RequestLineStatus`: Pending, Found, NotFound
 - `UserRole`: Seller, Stockist, Admin
-- `ZoneType`: PAP, FittingRooms, Custom
+- `ZoneType`: RTW, FittingRooms, Checkout, Reception, Custom
 - `ClothingFamily`: COA, JAC, TSH, SWE, VES, JEA, PAN, SHO, SKI, DRE, SHI, BLO, SHE, BEL, BAG, JEW
-- `Size`: XS, S, M, L, XL, OneSize
+- `Size`: XXS, XS, S, M, L, XL, XXL, OneSize
 
 ## Testing
 
