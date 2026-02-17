@@ -1,7 +1,0 @@
-<Solution>
-  <Project Path="runapp.client/runapp.client.esproj">
-    <Build />
-    <Deploy />
-  </Project>
-  <Project Path="RunApp.Server/RunApp.Server.csproj" />
-</Solution>
