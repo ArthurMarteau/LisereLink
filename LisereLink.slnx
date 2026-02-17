@@ -3,5 +3,9 @@
     <Build />
     <Deploy />
   </Project>
-  <Project Path="LisereLink.Server/LisereLink.Server.csproj" />
+  <Project Path="src/Lisere.Domain/Lisere.Domain.csproj" />
+  <Project Path="src/Lisere.Application/Lisere.Application.csproj" />
+  <Project Path="src/Lisere.Infrastructure/Lisere.Infrastructure.csproj" />
+  <Project Path="src/Lisere.API/Lisere.API.csproj" />
+  <Project Path="src/Lisere.Tests/Lisere.Tests.csproj" />
 </Solution>

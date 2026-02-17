@@ -95,7 +95,7 @@ Mobile application (PWA) allowing sellers to submit clothing requests and stocki
 
 **Main Screens:**
 1. Login
-2. Zone Selection (PAP/Cabines/Custom)
+2. Zone Selection (RTW/FittingRooms/Checkout/Reception/Custom)
 3. Article Search (search bar + barcode scan)
 4. Current Requests List
 5. History
@@ -273,18 +273,20 @@ public class Stock
 - `NotFound`
 
 **ZoneType:**
-- `PAP`
-- `Cabines`
+- `RTW` (Ready-To-Wear)
+- `FittingRooms`
+- `Checkout`
+- `Reception`
 - `Custom` (customizable zones)
 
 **ClothingFamily:**
-- `COA` (Coats), `JAC` (Jackets), `TSH` (T-shirts), `PUL` (Pullovers), `VES` (Vests)
+- `COA` (Coats), `JAC` (Jackets), `TSH` (T-shirts), `SWE` (Sweaters), `VES` (Vests)
 - `JEA` (Jeans), `PAN` (Pants), `SHO` (Shorts), `SKI` (Skirts), `DRE` (Dresses)
 - `SHI` (Shirts), `BLO` (Blouses)
 - `SHE` (Shoes), `BEL` (Belts), `BAG` (Bags), `JEW` (Jewelry)
 
 **Size:**
-- `XS`, `S`, `M`, `L`, `XL`, `OS` (One Size)
+- `XXS`, `XS`, `S`, `M`, `L`, `XL`, `XXL`, `OneSize`
 
 ---
 
@@ -293,7 +295,7 @@ public class Stock
 ### Seller Workflow
 
 1. **Login** â†’ Email/Password (JWT)
-2. **Zone Selection** â†’ PAP / Cabines / Custom
+2. **Zone Selection** â†’ RTW / FittingRooms / Checkout / Reception / Custom
 3. **Article Search:**
    - Search bar (name, family)
    - OR Barcode scan (EAN-13 via smartphone camera, @ericblade/quagga2)
@@ -315,7 +317,7 @@ public class Stock
 ### Stockist Workflow
 
 1. **Login** â†’ Email/Password
-2. **Zone Selection** â†’ PAP / Cabines / Custom
+2. **Zone Selection** â†’ RTW / FittingRooms / Checkout / Reception / Custom
 3. **Receive Notification** (push + sound + vibration)
 4. **View request** â†’ Article, color, size(s), seller
 5. **Processing:**
