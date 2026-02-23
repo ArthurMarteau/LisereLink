@@ -17,8 +17,12 @@ using ArticleRepo = Lisere.StockApi.Infrastructure.Persistence.Repositories.Arti
 var builder = WebApplication.CreateBuilder(args);
 
 // ── EF Core — base de données séparée : LisereStockApi ──────────────────────
-builder.Services.AddDbContext<StockApiDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("StockApiConnection")));
+// En environnement "Test", le WebApplicationFactory injecte sa propre base InMemory
+if (!builder.Environment.IsEnvironment("Test"))
+{
+    builder.Services.AddDbContext<StockApiDbContext>(options =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("StockApiConnection")));
+}
 
 // ── Repositories ─────────────────────────────────────────────────────────────
 builder.Services.AddScoped<IArticleRepo, ArticleRepo>();
@@ -71,3 +75,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Nécessaire pour WebApplicationFactory<Program> dans les tests d'intégration
+public partial class Program { }

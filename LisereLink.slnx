@@ -13,5 +13,6 @@
     <Project Path="src/Lisere.StockApi/Lisere.StockApi.Application/Lisere.StockApi.Application.csproj" />
     <Project Path="src/Lisere.StockApi/Lisere.StockApi.Infrastructure/Lisere.StockApi.Infrastructure.csproj" />
     <Project Path="src/Lisere.StockApi/Lisere.StockApi.API/Lisere.StockApi.API.csproj" />
+    <Project Path="src/Lisere.StockApi/Lisere.StockApi.Tests/Lisere.StockApi.Tests.csproj" />
   </Folder>
 </Solution>
