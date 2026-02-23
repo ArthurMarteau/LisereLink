@@ -1,11 +1,18 @@
+using Lisere.Domain.Enums;
 using Lisere.StockApi.Domain.Entities;
 
 namespace Lisere.StockApi.Domain.Interfaces;
 
 public interface IStockEntryRepository
 {
-    Task<IEnumerable<StockEntry>> GetByArticleAndStoreAsync(
+    Task<IEnumerable<StockEntry>> GetByArticleAsync(
         Guid articleId,
+        string storeId,
+        CancellationToken cancellationToken = default);
+
+    Task<StockEntry?> GetByArticleAndSizeAsync(
+        Guid articleId,
+        Size size,
         string storeId,
         CancellationToken cancellationToken = default);
 
@@ -16,4 +23,6 @@ public interface IStockEntryRepository
         CancellationToken cancellationToken = default);
 
     Task UpsertAsync(StockEntry entry, CancellationToken cancellationToken = default);
+
+    Task UpsertRangeAsync(IEnumerable<StockEntry> entries, CancellationToken cancellationToken = default);
 }

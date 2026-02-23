@@ -24,5 +24,8 @@ public class StoreConfiguration : IEntityTypeConfiguration<Store>
 
         builder.HasIndex(s => s.Code)
             .IsUnique();
+
+        builder.HasIndex(s => s.Name)
+            .IsUnique();
     }
 }

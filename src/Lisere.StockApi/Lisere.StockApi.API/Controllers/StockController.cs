@@ -1,3 +1,5 @@
+using Lisere.StockApi.Application.Common;
+using Lisere.StockApi.Application.DTOs;
 using Lisere.StockApi.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,8 +16,10 @@ public class StockController : ControllerBase
         _stockService = stockService;
     }
 
-    /// <summary>GET /api/stock/{articleId}?storeId=paris-opera</summary>
+    /// <summary>GET /api/stock/{articleId}?storeId=paris-opera — Stocks par taille pour un article.</summary>
     [HttpGet("{articleId:guid}")]
+    [ProducesResponseType(typeof(IEnumerable<StockEntryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetByArticle(
         Guid articleId,
         [FromQuery] string storeId,
@@ -24,12 +28,14 @@ public class StockController : ControllerBase
         if (string.IsNullOrWhiteSpace(storeId))
             return BadRequest("Le paramètre storeId est requis.");
 
-        var stock = await _stockService.GetStockByArticleAsync(articleId, storeId, cancellationToken);
+        var stock = await _stockService.GetStockAsync(articleId, storeId, cancellationToken);
         return Ok(stock);
     }
 
-    /// <summary>GET /api/stock/articles?storeId=paris-opera&amp;page=1&amp;pageSize=50</summary>
+    /// <summary>GET /api/stock/articles?storeId=paris-opera&amp;page=1&amp;pageSize=50 — Tous articles + stock pour un magasin.</summary>
     [HttpGet("articles")]
+    [ProducesResponseType(typeof(PagedResult<ArticleStockDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetByStore(
         [FromQuery] string storeId,
         [FromQuery] int page = 1,
@@ -39,7 +45,7 @@ public class StockController : ControllerBase
         if (string.IsNullOrWhiteSpace(storeId))
             return BadRequest("Le paramètre storeId est requis.");
 
-        var result = await _stockService.GetStockByStoreAsync(storeId, page, pageSize, cancellationToken);
+        var result = await _stockService.GetAllArticlesWithStockAsync(storeId, page, pageSize, cancellationToken);
         return Ok(result);
     }
 }

@@ -1,4 +1,4 @@
-namespace Lisere.StockApi.Application.DTOs;
+namespace Lisere.StockApi.Application.Common;
 
 public class PagedResult<T>
 {

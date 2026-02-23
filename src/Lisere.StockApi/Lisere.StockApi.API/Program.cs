@@ -1,4 +1,6 @@
 using System.Text;
+using Lisere.StockApi.API.Data;
+using Lisere.StockApi.API.Middlewares;
 using Lisere.StockApi.Application.Interfaces;
 using Lisere.StockApi.Application.Services;
 using Lisere.StockApi.Domain.Interfaces;
@@ -8,25 +10,25 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
-// Utilise les interfaces du StockApi.Domain (pas Lisere.Domain.Interfaces)
+// Aliases pour lever l'ambiguïté avec Lisere.Domain.Interfaces
 using IArticleRepo = Lisere.StockApi.Domain.Interfaces.IArticleRepository;
 using ArticleRepo = Lisere.StockApi.Infrastructure.Persistence.Repositories.ArticleRepository;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// EF Core — base de données séparée : LisereStockApi
+// ── EF Core — base de données séparée : LisereStockApi ──────────────────────
 builder.Services.AddDbContext<StockApiDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("StockApiDb")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("StockApiConnection")));
 
-// Repositories
+// ── Repositories ─────────────────────────────────────────────────────────────
 builder.Services.AddScoped<IArticleRepo, ArticleRepo>();
 builder.Services.AddScoped<IStockEntryRepository, StockEntryRepository>();
 builder.Services.AddScoped<IStoreRepository, StoreRepository>();
 
-// Services
+// ── Services ──────────────────────────────────────────────────────────────────
 builder.Services.AddScoped<IStockService, StockService>();
 
-// JWT validation uniquement (pas d'ASP.NET Identity)
+// ── JWT validation uniquement (pas d'ASP.NET Identity) ───────────────────────
 var jwtSecret = builder.Configuration["Jwt:Secret"]
     ?? throw new InvalidOperationException("Jwt:Secret manquant dans la configuration.");
 
@@ -49,17 +51,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
+// ── Seed données de développement ────────────────────────────────────────────
 if (app.Environment.IsDevelopment())
 {
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<StockApiDbContext>();
+    await DataSeeder.SeedAsync(db);
+
     app.MapOpenApi();
 }
 
-app.UseExceptionHandler();
-app.UseStatusCodePages();
+// ── Pipeline ──────────────────────────────────────────────────────────────────
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

@@ -1,3 +1,4 @@
+using Lisere.Domain.Enums;
 using Lisere.StockApi.Domain.Entities;
 using Lisere.StockApi.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +14,7 @@ public class StockEntryRepository : IStockEntryRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<StockEntry>> GetByArticleAndStoreAsync(
+    public async Task<IEnumerable<StockEntry>> GetByArticleAsync(
         Guid articleId,
         string storeId,
         CancellationToken cancellationToken = default)
@@ -22,6 +23,20 @@ public class StockEntryRepository : IStockEntryRepository
             .Where(se => se.ArticleId == articleId && se.StoreId == storeId)
             .OrderBy(se => se.Size)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<StockEntry?> GetByArticleAndSizeAsync(
+        Guid articleId,
+        Size size,
+        string storeId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.StockEntries
+            .FirstOrDefaultAsync(se =>
+                se.ArticleId == articleId &&
+                se.Size == size &&
+                se.StoreId == storeId,
+                cancellationToken);
     }
 
     public async Task<(IEnumerable<StockEntry> Items, int TotalCount)> GetByStoreAsync(
@@ -64,6 +79,33 @@ public class StockEntryRepository : IStockEntryRepository
         {
             existing.AvailableQuantity = entry.AvailableQuantity;
             existing.LastUpdatedAt = entry.LastUpdatedAt;
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpsertRangeAsync(
+        IEnumerable<StockEntry> entries,
+        CancellationToken cancellationToken = default)
+    {
+        foreach (var entry in entries)
+        {
+            var existing = await _context.StockEntries
+                .FirstOrDefaultAsync(se =>
+                    se.ArticleId == entry.ArticleId &&
+                    se.Size == entry.Size &&
+                    se.StoreId == entry.StoreId,
+                    cancellationToken);
+
+            if (existing is null)
+            {
+                await _context.StockEntries.AddAsync(entry, cancellationToken);
+            }
+            else
+            {
+                existing.AvailableQuantity = entry.AvailableQuantity;
+                existing.LastUpdatedAt = entry.LastUpdatedAt;
+            }
         }
 
         await _context.SaveChangesAsync(cancellationToken);

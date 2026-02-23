@@ -1,4 +1,7 @@
+using Lisere.Domain.Entities;
+using Lisere.StockApi.Application.Common;
 using Lisere.StockApi.Application.DTOs;
+using Lisere.StockApi.Application.Exceptions;
 using Lisere.StockApi.Application.Interfaces;
 using Lisere.StockApi.Domain.Entities;
 using Lisere.StockApi.Domain.Enums;
@@ -10,23 +13,28 @@ public class StockService : IStockService
 {
     private readonly IStockEntryRepository _stockEntryRepository;
     private readonly IStoreRepository _storeRepository;
+    private readonly IArticleRepository _articleRepository;
 
-    public StockService(IStockEntryRepository stockEntryRepository, IStoreRepository storeRepository)
+    public StockService(
+        IStockEntryRepository stockEntryRepository,
+        IStoreRepository storeRepository,
+        IArticleRepository articleRepository)
     {
         _stockEntryRepository = stockEntryRepository;
         _storeRepository = storeRepository;
+        _articleRepository = articleRepository;
     }
 
-    public async Task<IEnumerable<StockEntryDto>> GetStockByArticleAsync(
+    public async Task<IEnumerable<StockEntryDto>> GetStockAsync(
         Guid articleId,
         string storeId,
         CancellationToken cancellationToken = default)
     {
-        var entries = await _stockEntryRepository.GetByArticleAndStoreAsync(articleId, storeId, cancellationToken);
-        return entries.Select(MapToDto);
+        var entries = await _stockEntryRepository.GetByArticleAsync(articleId, storeId, cancellationToken);
+        return entries.Select(MapEntryToDto);
     }
 
-    public async Task<PagedResult<ArticleStockDto>> GetStockByStoreAsync(
+    public async Task<PagedResult<ArticleStockDto>> GetAllArticlesWithStockAsync(
         string storeId,
         int page,
         int pageSize,
@@ -37,12 +45,30 @@ public class StockService : IStockService
 
         var (entries, totalCount) = await _stockEntryRepository.GetByStoreAsync(storeId, page, pageSize, cancellationToken);
 
+        // Fetch article metadata for each distinct article in this page
+        var articleIds = entries.Select(e => e.ArticleId).Distinct().ToList();
+        var articles = new Dictionary<Guid, Article>();
+        foreach (var id in articleIds)
+        {
+            var article = await _articleRepository.GetByIdAsync(id, cancellationToken);
+            if (article is not null)
+                articles[id] = article;
+        }
+
         var grouped = entries
             .GroupBy(e => e.ArticleId)
-            .Select(g => new ArticleStockDto
+            .Select(g =>
             {
-                ArticleId = g.Key,
-                Stock = g.Select(MapToDto).ToList()
+                articles.TryGetValue(g.Key, out var article);
+                return new ArticleStockDto
+                {
+                    ArticleId = g.Key,
+                    Barcode = article?.Barcode ?? string.Empty,
+                    Name = article?.Name ?? string.Empty,
+                    Family = article?.Family.ToString() ?? string.Empty,
+                    ColorOrPrint = article?.ColorOrPrint ?? string.Empty,
+                    Stock = g.Select(MapEntryToDto).ToList()
+                };
             });
 
         return new PagedResult<ArticleStockDto>
@@ -57,7 +83,11 @@ public class StockService : IStockService
     public async Task UpdateStockAsync(UpdateStockDto dto, CancellationToken cancellationToken = default)
     {
         if (dto.NewQuantity < 0)
-            throw new ArgumentOutOfRangeException(nameof(dto.NewQuantity), "La quantité ne peut pas être négative.");
+            throw new StockException("La quantité ne peut pas être négative.");
+
+        var article = await _articleRepository.GetByIdAsync(dto.ArticleId, cancellationToken);
+        if (article is null)
+            throw new StockException($"Article introuvable : {dto.ArticleId}.");
 
         var store = await _storeRepository.GetByCodeAsync(dto.StoreId, cancellationToken);
         var storeType = store?.Type ?? StoreType.Physical;
@@ -76,7 +106,34 @@ public class StockService : IStockService
         await _stockEntryRepository.UpsertAsync(entry, cancellationToken);
     }
 
-    private static StockEntryDto MapToDto(StockEntry entry) => new()
+    public async Task<PagedResult<ArticleDto>> GetArticlesAsync(
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        pageSize = Math.Min(pageSize, 50);
+        page = Math.Max(page, 1);
+
+        var (items, totalCount) = await _articleRepository.GetAllAsync(page, pageSize, cancellationToken);
+
+        return new PagedResult<ArticleDto>
+        {
+            Items = items.Select(MapArticleToDto),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
+    public async Task<ArticleDto?> GetArticleByBarcodeAsync(
+        string barcode,
+        CancellationToken cancellationToken = default)
+    {
+        var article = await _articleRepository.GetByBarcodeAsync(barcode, cancellationToken);
+        return article is null ? null : MapArticleToDto(article);
+    }
+
+    private static StockEntryDto MapEntryToDto(StockEntry entry) => new()
     {
         ArticleId = entry.ArticleId,
         Size = entry.Size,
@@ -84,5 +141,15 @@ public class StockService : IStockService
         StoreType = entry.StoreType,
         StoreId = entry.StoreId,
         LastUpdatedAt = entry.LastUpdatedAt
+    };
+
+    private static ArticleDto MapArticleToDto(Article article) => new()
+    {
+        Id = article.Id,
+        Barcode = article.Barcode,
+        Name = article.Name,
+        Family = article.Family.ToString(),
+        ColorOrPrint = article.ColorOrPrint,
+        AvailableSizes = article.AvailableSizes.Select(s => s.ToString()).ToList()
     };
 }
