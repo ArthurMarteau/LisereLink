@@ -46,9 +46,6 @@ public class ArticleConfiguration : IEntityTypeConfiguration<Article>
             .HasConversion(sizesConverter, sizesComparer)
             .HasColumnType("nvarchar(200)");
 
-        builder.Property(a => a.LastSyncedAt)
-            .IsRequired(false);
-
         // Audit fields — présents dans BaseEntity mais non enforced ici (StockApi est la source de vérité)
         builder.Property(a => a.CreatedBy)
             .HasMaxLength(256)
