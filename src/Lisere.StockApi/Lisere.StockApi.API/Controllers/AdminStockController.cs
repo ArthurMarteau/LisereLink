@@ -31,7 +31,7 @@ public class AdminStockController : ControllerBase
         CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
 
         await _stockService.UpdateStockAsync(dto, cancellationToken);
         return NoContent();

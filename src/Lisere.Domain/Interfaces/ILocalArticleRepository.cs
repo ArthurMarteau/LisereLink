@@ -2,7 +2,7 @@ using Lisere.Domain.Entities;
 
 namespace Lisere.Domain.Interfaces;
 
-public interface IArticleRepository
+public interface ILocalArticleRepository
 {
     Task<Article?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 

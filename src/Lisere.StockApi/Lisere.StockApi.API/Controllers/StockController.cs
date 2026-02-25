@@ -26,7 +26,12 @@ public class StockController : ControllerBase
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(storeId))
-            return BadRequest("Le paramètre storeId est requis.");
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Paramètre manquant",
+                Detail = "Le paramètre storeId est requis.",
+                Status = 400
+            });
 
         var stock = await _stockService.GetStockAsync(articleId, storeId, cancellationToken);
         return Ok(stock);
@@ -43,7 +48,12 @@ public class StockController : ControllerBase
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(storeId))
-            return BadRequest("Le paramètre storeId est requis.");
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Paramètre manquant",
+                Detail = "Le paramètre storeId est requis.",
+                Status = 400
+            });
 
         var result = await _stockService.GetAllArticlesWithStockAsync(storeId, page, pageSize, cancellationToken);
         return Ok(result);

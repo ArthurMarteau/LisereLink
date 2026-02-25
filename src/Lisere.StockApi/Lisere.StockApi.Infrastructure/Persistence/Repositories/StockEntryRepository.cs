@@ -33,9 +33,9 @@ public class StockEntryRepository : IStockEntryRepository
     {
         return await _context.StockEntries
             .FirstOrDefaultAsync(se =>
-                se.ArticleId == articleId &&
-                se.Size == size &&
-                se.StoreId == storeId,
+                    se.ArticleId == articleId &&
+                    se.Size == size &&
+                    se.StoreId == storeId,
                 cancellationToken);
     }
 
@@ -66,9 +66,9 @@ public class StockEntryRepository : IStockEntryRepository
     {
         var existing = await _context.StockEntries
             .FirstOrDefaultAsync(se =>
-                se.ArticleId == entry.ArticleId &&
-                se.Size == entry.Size &&
-                se.StoreId == entry.StoreId,
+                    se.ArticleId == entry.ArticleId &&
+                    se.Size == entry.Size &&
+                    se.StoreId == entry.StoreId,
                 cancellationToken);
 
         if (existing is null)
@@ -88,23 +88,30 @@ public class StockEntryRepository : IStockEntryRepository
         IEnumerable<StockEntry> entries,
         CancellationToken cancellationToken = default)
     {
-        foreach (var entry in entries)
-        {
-            var existing = await _context.StockEntries
-                .FirstOrDefaultAsync(se =>
-                    se.ArticleId == entry.ArticleId &&
-                    se.Size == entry.Size &&
-                    se.StoreId == entry.StoreId,
-                    cancellationToken);
+        var entriesList = entries.ToList();
 
-            if (existing is null)
-            {
+        var articleIds = entriesList.Select(e => e.ArticleId).Distinct().ToList();
+        var storeIds = entriesList.Select(e => e.StoreId).Distinct().ToList();
+
+        // 1 requête — charge uniquement les entrées concernées
+        var existing = await _context.StockEntries
+            .Where(se => articleIds.Contains(se.ArticleId)
+                         && storeIds.Contains(se.StoreId))
+            .ToListAsync(cancellationToken);
+
+        foreach (var entry in entriesList)
+        {
+            var found = existing.FirstOrDefault(se =>
+                se.ArticleId == entry.ArticleId &&
+                se.Size == entry.Size &&
+                se.StoreId == entry.StoreId);
+
+            if (found is null)
                 await _context.StockEntries.AddAsync(entry, cancellationToken);
-            }
             else
             {
-                existing.AvailableQuantity = entry.AvailableQuantity;
-                existing.LastUpdatedAt = entry.LastUpdatedAt;
+                found.AvailableQuantity = entry.AvailableQuantity;
+                found.LastUpdatedAt = entry.LastUpdatedAt;
             }
         }
 

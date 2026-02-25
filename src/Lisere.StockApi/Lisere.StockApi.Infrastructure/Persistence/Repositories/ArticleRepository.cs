@@ -18,6 +18,13 @@ public class ArticleRepository : IArticleRepository
         return await _context.Articles
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
     }
+    
+    public async Task<IEnumerable<Article>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        return await _context.Articles
+            .Where(a => ids.Contains(a.Id))
+            .ToListAsync(cancellationToken);
+    }
 
     public async Task<Article?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
     {

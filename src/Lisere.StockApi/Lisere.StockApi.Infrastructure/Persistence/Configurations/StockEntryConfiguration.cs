@@ -1,4 +1,5 @@
 using Lisere.StockApi.Domain.Entities;
+using Lisere.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -21,6 +22,11 @@ public class StockEntryConfiguration : IEntityTypeConfiguration<StockEntry>
         builder.Property(se => se.StoreId)
             .IsRequired()
             .HasMaxLength(100);
+        
+        builder.HasOne<Article>()
+            .WithMany()
+            .HasForeignKey(se => se.ArticleId)
+            .OnDelete(DeleteBehavior.Cascade); // supprime les StockEntry si l'Article est supprimé
 
         // Contrainte d'unicité métier : un article/taille/magasin = une seule entrée de stock
         builder.HasIndex(se => new { se.ArticleId, se.Size, se.StoreId })

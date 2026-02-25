@@ -43,17 +43,13 @@ public class StockService : IStockService
         pageSize = Math.Min(pageSize, 50);
         page = Math.Max(page, 1);
 
-        var (entries, totalCount) = await _stockEntryRepository.GetByStoreAsync(storeId, page, pageSize, cancellationToken);
+        var (entriesList, totalCount) = await _stockEntryRepository.GetByStoreAsync(storeId, page, pageSize, cancellationToken);
+        var entries = entriesList.ToList();
 
         // Fetch article metadata for each distinct article in this page
         var articleIds = entries.Select(e => e.ArticleId).Distinct().ToList();
-        var articles = new Dictionary<Guid, Article>();
-        foreach (var id in articleIds)
-        {
-            var article = await _articleRepository.GetByIdAsync(id, cancellationToken);
-            if (article is not null)
-                articles[id] = article;
-        }
+        var articleList = await _articleRepository.GetByIdsAsync(articleIds, cancellationToken);
+        var articles = articleList.ToDictionary(a => a.Id);
 
         var grouped = entries
             .GroupBy(e => e.ArticleId)

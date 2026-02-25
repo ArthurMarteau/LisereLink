@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lisere.Infrastructure.Persistence.Repositories;
 
-public class ArticleRepository : IArticleRepository
+public class LocalArticleRepository : ILocalArticleRepository
 {
     private readonly LisereDbContext _context;
 
-    public ArticleRepository(LisereDbContext context)
+    public LocalArticleRepository(LisereDbContext context)
     {
         _context = context;
     }

@@ -4,7 +4,7 @@ namespace Lisere.StockApi.Domain.Interfaces;
 
 /// <summary>
 /// Repository articles côté StockApi — source de vérité, CRUD complet.
-/// Distinct de Lisere.Domain.Interfaces.IArticleRepository (lecture seule dans Lisere.API).
+/// Distinct de Lisere.Domain.Interfaces.ILocalArticleRepository (lecture seule dans Lisere.API).
 /// </summary>
 public interface IArticleRepository
 {
@@ -16,6 +16,8 @@ public interface IArticleRepository
         int page,
         int pageSize,
         CancellationToken cancellationToken = default);
+    
+    Task<IEnumerable<Article>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
 
     Task AddAsync(Article article, CancellationToken cancellationToken = default);
 
