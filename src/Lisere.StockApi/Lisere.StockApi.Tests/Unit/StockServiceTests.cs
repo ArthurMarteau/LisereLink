@@ -35,13 +35,12 @@ public class StockServiceTests
         {
             ArticleId = Guid.NewGuid(),
             Size = Size.M,
-            StoreId = "paris-opera",
+            StoreId = "paris-2",
             NewQuantity = -1
         };
 
         await Assert.ThrowsAsync<StockException>(() => _service.UpdateStockAsync(dto));
-
-        // Le repository ne doit pas être appelé
+        
         await _stockEntryRepo.DidNotReceive().UpsertAsync(Arg.Any<StockEntry>(), Arg.Any<CancellationToken>());
     }
 
@@ -62,7 +61,7 @@ public class StockServiceTests
         };
 
         _articleRepo.GetByIdAsync(articleId, Arg.Any<CancellationToken>()).Returns(article);
-        _storeRepo.GetByCodeAsync("paris-opera", Arg.Any<CancellationToken>()).Returns((Store?)null);
+        _storeRepo.GetByCodeAsync("paris-2", Arg.Any<CancellationToken>()).Returns((Store?)null);
         _stockEntryRepo.UpsertAsync(Arg.Any<StockEntry>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
 
         var before = DateTime.UtcNow;
@@ -71,7 +70,7 @@ public class StockServiceTests
         {
             ArticleId = articleId,
             Size = Size.M,
-            StoreId = "paris-opera",
+            StoreId = "paris-2",
             NewQuantity = 5
         };
 
@@ -92,7 +91,7 @@ public class StockServiceTests
     public async Task GetStockAsync_WhenEntriesExist_ReturnsOnlyEntriesForRequestedStore()
     {
         var articleId = Guid.NewGuid();
-        const string storeId = "paris-opera";
+        const string storeId = "paris-2";
 
         var entries = new List<StockEntry>
         {

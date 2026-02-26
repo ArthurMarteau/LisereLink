@@ -14,15 +14,15 @@ Replace the walkie-talkie system for clothing orders in Lisere stores.
 ### Proposed solution
 Mobile application (PWA) allowing sellers to submit clothing requests and stockists to process them in real time.
 
-### What this app is â€” and is NOT
+### What this app is — and is NOT
 **Lisere is a request management tool.** Sellers send requests for clothing items, stockists fulfill them. That's it.
 
-- âŒ No article creation, update, or deletion â€” articles come from Lisere.StockApi
-- âŒ No stock modification â€” stock is managed by Lisere.StockApi (admin UI) and decremented at point of sale (out of scope)
-- âŒ No inventory management
-- âœ… Sellers search articles, select sizes, submit requests
-- âœ… Stockists receive, process, and fulfill requests
-- âœ… Real-time communication between seller and stockist
+- ❌ No article creation, update, or deletion — articles come from Lisere.StockApi
+- ❌ No stock modification — stock is managed by Lisere.StockApi (admin UI) and decremented at point of sale (out of scope)
+- ❌ No inventory management
+- ✅ Sellers search articles, select sizes, submit requests
+- ✅ Stockists receive, process, and fulfill requests
+- ✅ Real-time communication between seller and stockist
 
 ### MVP (Minimum Viable Product)
 **Main User Story:**
@@ -37,15 +37,15 @@ Mobile application (PWA) allowing sellers to submit clothing requests and stocki
 Two independent services sharing `Lisere.Domain`:
 
 ```
-Lisere.API          â†’ Main app (sellers, stockists, requests)
-Lisere.StockApi     â†’ Autonomous stock service (catalogue, stock levels, admin UI)
+Lisere.API          → Main app (sellers, stockists, requests)
+Lisere.StockApi     → Autonomous stock service (catalogue, stock levels, admin UI)
 ```
 
 Both services run simultaneously during development. Lisere.API calls Lisere.StockApi via HTTP.
 
 ### Authentication Strategy
 
-Both services share the same JWT secret (configured in appsettings). No dedicated Identity service â€” proportionate to project scale.
+Both services share the same JWT secret (configured in appsettings). No dedicated Identity service — proportionate to project scale.
 
 - **Lisere.API** issues JWT tokens (ASP.NET Core Identity)
 - **Lisere.StockApi** validates JWT tokens using the shared secret (`AddJwtBearer` only, no Identity dependency)
@@ -64,34 +64,34 @@ Both services share the same JWT secret (configured in appsettings). No dedicate
 
 ---
 
-### Lisere.API â€” Backend .NET 10
+### Lisere.API — Backend .NET 10
 
 **Architecture: Clean Architecture (4 layers)**
 
 ```
 Domain/
-â”œâ”€â”€ Entities (Request, Article, User, Stock, RequestLine)
-â”œâ”€â”€ Enums (RequestStatus, UserRole, ZoneType, ClothingFamily, Size)
-â”œâ”€â”€ Interfaces (IRequestRepository, IArticleRepository, IStockService, IExternalStockApiClient, IArticleSyncService)
-â””â”€â”€ ValueObjects
+├── Entities (Request, Article, User, Stock, RequestLine)
+├── Enums (RequestStatus, UserRole, ZoneType, ClothingFamily, Size)
+├── Interfaces (IRequestRepository, ILocalArticleRepository, IStockService, IExternalStockApiClient, IArticleSyncService)
+└── ValueObjects
 
 Application/
-â”œâ”€â”€ DTOs (CreateRequestDto, ArticleDto, StockDto, PagedResult<T>)
-â”œâ”€â”€ Services (RequestService, ArticleService, StockService, ArticleSyncService)
-â”œâ”€â”€ Validators (DataAnnotations)
-â””â”€â”€ Interfaces
+├── DTOs (CreateRequestDto, ArticleDto, StockDto, PagedResult<T>)
+├── Services (RequestService, ArticleService, StockService, ArticleSyncService)
+├── Validators (DataAnnotations)
+└── Interfaces
 
 Infrastructure/
-â”œâ”€â”€ Persistence (DbContext EF Core, Repositories)
-â”œâ”€â”€ SignalR (Hubs for real-time notifications)
-â”œâ”€â”€ Identity (ASP.NET Core Identity + JWT issuance)
-â”œâ”€â”€ BackgroundJobs (RequestTimeoutService, ArticleSyncService)
-â””â”€â”€ ExternalServices (ExternalStockApiClient â€” HTTP client for Lisere.StockApi)
+├── Persistence (DbContext EF Core, Repositories)
+├── SignalR (Hubs for real-time notifications)
+├── Identity (ASP.NET Core Identity + JWT issuance)
+├── BackgroundJobs (RequestTimeoutService, ArticleSyncService)
+└── ExternalServices (ExternalStockApiClient — HTTP client for Lisere.StockApi)
 
 API/
-â”œâ”€â”€ Controllers (RequestsController, ArticlesController â€” GET only)
-â”œâ”€â”€ Middlewares (ExceptionHandlingMiddleware, Auth, Logging)
-â””â”€â”€ Configuration (Program.cs, appsettings)
+├── Controllers (RequestsController, ArticlesController — GET only)
+├── Middlewares (ExceptionHandlingMiddleware, Auth, Logging)
+└── Configuration (Program.cs, appsettings)
 ```
 
 **Technologies:**
@@ -100,42 +100,40 @@ API/
 - SQL Server (database: LisereApp)
 - ASP.NET Core Identity (auth + JWT issuance)
 - SignalR (real-time WebSocket with automatic retry)
-- Serilog (structured logging)
 - Redis Cache (stock TTL 30s, shared across store instances)
 
 ---
 
-### Lisere.StockApi â€” Autonomous Stock Service
+### Lisere.StockApi — Autonomous Stock Service
 
 **Architecture: Clean Architecture (4 layers)**
 
 ```
 Lisere.StockApi.Domain/
-â”œâ”€â”€ Entities (StockEntry, Store)
-â”œâ”€â”€ Enums (StoreType: Physical, Online)
-â””â”€â”€ Interfaces (IStockEntryRepository, IStoreRepository)
-â€” references Lisere.Domain for shared enums + Article entity
+├── Entities (StockEntry, Store)
+├── Enums (StoreType: Physical, Online)
+└── Interfaces (IStockEntryRepository, IStoreRepository)
+— references Lisere.Domain for shared enums + Article entity
 
 Lisere.StockApi.Application/
-â”œâ”€â”€ DTOs (StockEntryDto, ArticleStockDto, StoreDto, UpdateStockDto)
-â”œâ”€â”€ Services (StockService)
-â””â”€â”€ Interfaces (IStockService)
+├── DTOs (StockEntryDto, ArticleStockDto, StoreDto, UpdateStockDto)
+├── Services (StockService)
+└── Interfaces (IStockService)
 
 Lisere.StockApi.Infrastructure/
-â”œâ”€â”€ Persistence (StockApiDbContext, Repositories)
-â””â”€â”€ Configurations (EF Core)
+├── Persistence (StockApiDbContext, Repositories)
+└── Configurations (EF Core)
 
 Lisere.StockApi.API/
-â”œâ”€â”€ Controllers (StockController, ArticlesController, AdminStockController)
-â”œâ”€â”€ Middlewares (ExceptionHandlingMiddleware â€” same ProblemDetails standard as Lisere.API)
-â””â”€â”€ Configuration (Program.cs â€” port 5200)
+├── Controllers (StockController, ArticlesController, AdminStockController)
+├── Middlewares (ExceptionHandlingMiddleware — same ProblemDetails standard as Lisere.API)
+└── Configuration (Program.cs — port 5200)
 ```
 
 **Technologies:**
 - .NET 10
 - Entity Framework Core (Code First)
-- SQL Server (database: LisereStockApi â€” separate from main app)
-- Serilog
+- SQL Server (database: LisereStockApi — separate from main app)
 - JWT validation only (AddJwtBearer, shared secret with Lisere.API)
 
 **Role:**
@@ -178,7 +176,7 @@ Lisere.StockApi.API/
 3. Article Search (search bar + barcode scan)
 4. Current Requests List
 5. History
-6. Admin â€” Stock Management (route `/admin`, Admin role only)
+6. Admin — Stock Management (route `/admin`, Admin role only)
 
 ---
 
@@ -208,7 +206,7 @@ Lisere.StockApi.API/
 
 ### Database
 
-**Lisere.API â€” Entity Framework Core:**
+**Lisere.API — Entity Framework Core:**
 - Code First with migrations
 - Soft Delete (`IsDeleted` field)
 - Full audit trail on all entities:
@@ -220,10 +218,10 @@ Lisere.StockApi.API/
   public bool IsDeleted { get; set; }
   ```
 
-**Lisere.StockApi â€” Entity Framework Core:**
+**Lisere.StockApi — Entity Framework Core:**
 - Code First with migrations
-- No soft delete â€” stock entries are operational data, physical deletion is acceptable
-- No full audit trail â€” `StockEntry` uses `LastUpdatedAt` only (lightweight, updated on every stock change)
+- No soft delete — stock entries are operational data, physical deletion is acceptable
+- No full audit trail — `StockEntry` uses `LastUpdatedAt` only (lightweight, updated on every stock change)
 - `Store` has no audit trail (static reference data)
 
 **Conventions (both services):**
@@ -245,21 +243,37 @@ Both services follow the same standard: **ProblemDetails (RFC 7807)** via a glob
 }
 ```
 
-- BusinessException / StockException â†’ 400
-- Not found â†’ 404
-- Unhandled â†’ 500 (stack trace in dev only, generic message in prod)
-- Logs: Info/Warning/Error via Serilog (structured JSON)
+- BusinessException / StockException → 400
+- Not found → 404
+- Unhandled → 500 (stack trace in dev only, generic message in prod)
+- Logs: Info/Warning/Error via ILogger (structured JSON)
+
+### Logging
+
+Both services use `ILogger<T>` (interface standard ASP.NET Core) throughout the codebase.
+
+**Nice-to-have — Serilog:**
+Serilog can be added as a logging provider behind `ILogger` without modifying existing code.
+It is recommended once the deployment target is known, as the choice of sinks (Console, File, Seq, Datadog, etc.)
+depends on the infrastructure. Adding Serilog does not require any code changes — only `Program.cs` configuration
+and NuGet packages.
+
+Relevant packages when needed:
+- `Serilog.AspNetCore`
+- `Serilog.Sinks.Console`
+- `Serilog.Sinks.File`
+- Additional sinks depending on target (Seq, Datadog, Application Insights...)
 
 ### Performance
 
-- **Redis Cache** for stock (TTL 30s) â€” Lisere.API only, shared across store instances
-- **Mandatory pagination**: max 50 results per page â€” applies to both services
+- **Redis Cache** for stock (TTL 30s) — Lisere.API only, shared across store instances
+- **Mandatory pagination**: max 50 results per page — applies to both services
 - **Lazy Loading** images (React Suspense/Intersection Observer)
 - **SignalR reconnection** automatic (exponential backoff)
 
 ### Tests
 
-**Minimum coverage: 80% â€” applies to both services**
+**Minimum coverage: 80% — applies to both services**
 
 **Lisere.API:**
 1. **Unit** (xUnit): RequestService, ArticleService, StockService, ArticleSyncService, Domain logic
@@ -268,9 +282,9 @@ Both services follow the same standard: **ProblemDetails (RFC 7807)** via a glob
 4. **Mock** Lisere.StockApi via NSubstitute on IExternalStockApiClient
 
 **Lisere.StockApi:**
-1. **Unit** (xUnit): StockService â€” UpdateStock (negative quantity rejected), GetStock (per store), article catalogue
+1. **Unit** (xUnit): StockService — UpdateStock (negative quantity rejected), GetStock (per store), article catalogue
 2. **Integration** (WebApplicationFactory): StockController, ArticlesController, AdminStockController (JWT Admin required)
-3. No E2E â€” StockApi has no UI of its own
+3. No E2E — StockApi has no UI of its own
 
 **Shared tooling:** xUnit, NSubstitute (or Moq), WebApplicationFactory
 
@@ -278,7 +292,7 @@ Both services follow the same standard: **ProblemDetails (RFC 7807)** via a glob
 
 ## BUSINESS DOMAIN
 
-### Main Entities â€” Lisere.Domain (shared)
+### Main Entities — Lisere.Domain (shared)
 
 **1. Request (Aggregate Root)**
 ```csharp
@@ -343,7 +357,7 @@ public class User : IdentityUser<Guid>
 }
 ```
 
-**5. Stock (value object â€” read from Lisere.StockApi, cached in Redis)**
+**5. Stock (value object — read from Lisere.StockApi, cached in Redis)**
 ```csharp
 public class Stock
 {
@@ -355,7 +369,7 @@ public class Stock
 
 ---
 
-### Main Entities â€” Lisere.StockApi.Domain
+### Main Entities — Lisere.StockApi.Domain
 
 **1. StockEntry**
 ```csharp
@@ -407,17 +421,17 @@ public class Store
 
 ### Seller Workflow
 
-1. **Login** â†’ Email/Password (JWT)
-2. **Zone Selection** â†’ RTW / FittingRooms / Checkout / Reception / Custom
+1. **Login** → Email/Password (JWT)
+2. **Zone Selection** → RTW / FittingRooms / Checkout / Reception / Custom
 3. **Article Search:**
-   - Search bar (name, family) â€” results from local DB (synced from StockApi)
+   - Search bar (name, family) — results from local DB (synced from StockApi)
    - Stock availability checked via Lisere.StockApi (Redis TTL 30s) at search time
    - OR Barcode scan (EAN-13 via smartphone camera, @ericblade/quagga2)
 4. **Color/Print + Size(s) Selection**
    - Multiple sizes allowed (customer hesitates S/M)
 5. **Add to cart OR Submit**
-   - Add â†’ back to search
-   - Submit â†’ stock re-checked â†’ Send request + Notify stockist
+   - Add → back to search
+   - Submit → stock re-checked → Send request + Notify stockist
 6. **Notifications received:**
    - Request accepted
    - Alternative proposed (other color/size)
@@ -430,21 +444,21 @@ public class Store
 
 ### Stockist Workflow
 
-1. **Login** â†’ Email/Password
-2. **Zone Selection** â†’ RTW / FittingRooms / Checkout / Reception / Custom
+1. **Login** → Email/Password
+2. **Zone Selection** → RTW / FittingRooms / Checkout / Reception / Custom
 3. **Receive Notification** (push + sound + vibration)
-4. **View request** â†’ Article, color, size(s), seller
+4. **View request** → Article, color, size(s), seller
 5. **Processing:**
    - Mark "In Progress"
    - Search article in stock
    - Mark "Found" OR "Not Found"
    - Propose alternative if needed
-6. **Delivery** â†’ Bring to floor
+6. **Delivery** → Bring to floor
 7. **Visibility:**
    - List all pending requests
    - Day history
 8. **Strict FIFO** (no manual prioritization)
-9. **No stock reservation** â€” first stockist to find the article wins. Second stockist declares "Not Found"
+9. **No stock reservation** — first stockist to find the article wins. Second stockist declares "Not Found"
 
 ### Admin Workflow
 
@@ -465,10 +479,10 @@ public class Store
 
 1. **A request without stock = impossible**
    - Stock checked via Lisere.StockApi before creation
-   - If stock = 0 â†’ "Unavailable" message, request not created
+   - If stock = 0 → "Unavailable" message, request not created
 
 2. **Stock check at search time + re-check at submission**
-   - Search: Redis cache (TTL 30s) â€” acceptable 30s lag
+   - Search: Redis cache (TTL 30s) — acceptable 30s lag
    - Submission: fresh check to avoid race conditions
 
 3. **Multiple sizes same article = allowed**
@@ -482,10 +496,10 @@ public class Store
 5. **Auto-cancellation after 30 min** if not processed
    - Handled by `RequestTimeoutService` (BackgroundService)
    - Runs every minute, checks `Pending` requests older than 30 min
-   - Status â†’ `Cancelled`, SignalR notification sent to seller
+   - Status → `Cancelled`, SignalR notification sent to seller
 
 6. **Request editable** while Status = `Pending`
-   - If `InProgress` â†’ must cancel then recreate
+   - If `InProgress` → must cancel then recreate
 
 ### Priorities & Assignment
 
@@ -527,23 +541,23 @@ public class Store
 - Message queue if temporarily offline
 
 **Notification triggers:**
-- New request â†’ Stockist
-- Request accepted â†’ Seller
-- Article found/not found â†’ Seller
-- Alternative proposed â†’ Seller
-- Request cancelled â†’ Stockist
+- New request → Stockist
+- Request accepted → Seller
+- Article found/not found → Seller
+- Alternative proposed → Seller
+- Request cancelled → Stockist
 
 ### Article Sync Strategy
 
 - `ArticleSyncService` (BackgroundService in Lisere.API) syncs article catalogue from Lisere.StockApi hourly + on startup
 - Articles stored locally in Lisere DB for fast search and offline display
-- Stock levels are never stored locally â€” always fetched live from Lisere.StockApi via Redis cache (TTL 30s)
-- If Lisere.StockApi is down â†’ show cached data with warning, block new request creation
+- Stock levels are never stored locally — always fetched live from Lisere.StockApi via Redis cache (TTL 30s)
+- If Lisere.StockApi is down → show cached data with warning, block new request creation
 
 ### Mobile First
 
 - Installable PWA (add to home screen)
-- Responsive design (iPhone SE â†’ iPad)
+- Responsive design (iPhone SE → iPad)
 - EAN-13 barcode scan via native camera (@ericblade/quagga2)
 - Web push notifications (requires HTTPS)
 
@@ -574,7 +588,7 @@ comme filet de sécurité si un webhook est raté.
 
 ---
 
-## Lisere.StockApi â€” Autonomous Stock Service
+## Lisere.StockApi — Autonomous Stock Service
 
 ### Role
 
@@ -591,7 +605,7 @@ The base URL is configurable in Lisere.API's `appsettings.json`:
 }
 ```
 
-### Endpoints â€” Read (consumed by Lisere.API)
+### Endpoints — Read (consumed by Lisere.API)
 
 #### `GET /api/articles?page=1&pageSize=50`
 Returns all catalogue articles (paginated, max 50).
@@ -603,7 +617,7 @@ Returns all catalogue articles (paginated, max 50).
       "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       "barcode": "1234567890123",
       "family": "DRE",
-      "name": "Robe Fleurie",
+      "name": "Robe Emma",
       "colorOrPrint": "Rouge",
       "availableSizes": ["XS", "S", "M", "L"]
     }
@@ -642,7 +656,7 @@ Returns stock levels for all sizes of an article, for a given store.
 #### `GET /api/stock/articles?storeId=xxx&page=1&pageSize=50`
 Returns all articles with their stock for a given store (paginated, max 50).
 
-### Endpoints â€” Admin (JWT required, Admin role)
+### Endpoints — Admin (JWT required, Admin role)
 
 #### `PUT /api/admin/stock`
 Updates the quantity for an article/size/store. Requires valid JWT with Admin role claim.
@@ -661,7 +675,7 @@ Returns `204 No Content`. Returns `400` if quantity is negative.
 
 | StoreId | Name | Type |
 |---|---|---|
-| paris-opera | Paris OpÃ©ra | Physical |
+| paris-opera | Paris Opéra | Physical |
 | lyon-bellecour | Lyon Bellecour | Physical |
 | online | Online | Online |
 
@@ -672,7 +686,7 @@ Returns `204 No Content`. Returns `400` if quantity is negative.
 - Quantity cannot be negative
 - Only Admin can modify stock via the admin endpoint (JWT + Admin role)
 - Online stock is independent from physical stock
-- No stock reservation â€” first come first served
+- No stock reservation — first come first served
 
 ---
 
@@ -680,31 +694,30 @@ Returns `204 No Content`. Returns `400` if quantity is negative.
 
 ### General Principles
 
-1. **Professional solutions ALWAYS** â€” no hacky shortcuts
-2. **Concise and iterative** â€” one step at a time, wait for validation
-3. **Security by default** â€” input validation everywhere, HTTPS + CORS + Rate limiting
-4. **Performance from the start** â€” pagination, cache, lazy loading
+1. **Professional solutions ALWAYS** — no hacky shortcuts
+2. **Concise and iterative** — one step at a time, wait for validation
+3. **Security by default** — input validation everywhere, HTTPS + CORS + Rate limiting
+4. **Performance from the start** — pagination, cache, lazy loading
 
 ### Suggested Development Order
 
-**Phase 0 â€” Lisere.StockApi (first, enables realistic testing of everything)**
+**Phase 0 — Lisere.StockApi (first, enables realistic testing of everything)**
 1. Clean Architecture setup
 2. Domain entities + EF Core + migrations
 3. Repositories + Services
 4. Controllers + Seed data (20 articles, 3 stores, varied stock)
 
-**Phase 1 â€” Lisere.API Backend Foundations**
-1. Domain corrections (IArticleRepository read-only, IExternalStockApiClient, IArticleSyncService)
+**Phase 1 — Lisere.API Backend Foundations**
+1. Domain corrections (ILocalArticleRepository read-only, IExternalStockApiClient, IArticleSyncService)
 2. DTOs + Mapping
 3. Application Services (RequestService, ArticleService, StockService, ArticleSyncService)
 4. Program.cs configuration
 
-**Phase 2 â€” Auth & Security**
+**Phase 2 — Auth & Security**
 1. ASP.NET Identity + JWT (Lisere.API issues tokens)
 2. JWT validation in Lisere.StockApi (shared secret)
 3. CORS + Rate Limiting
 4. ProblemDetails middleware (both services)
-5. Serilog configuration
 
 **Phase 3 — Real-time & Cache**
 1. SignalR Hub
@@ -712,16 +725,16 @@ Returns `204 No Content`. Returns `400` if quantity is negative.
 3. RequestTimeoutService (BackgroundService)
 4. Webhook StockApi → Lisere.API (invalidation cache Redis temps réel)
 
-**Phase 4 â€” Frontend**
+**Phase 4 — Frontend**
 1. React PWA + TypeScript setup
 2. Auth flow
 3. Main screens (seller + stockist)
 4. SignalR client
 5. Zustand + offline persistence
 6. PWA manifest + Service Worker
-7. Admin microfrontend (`/admin` route â€” stock management)
+7. Admin microfrontend (`/admin` route — stock management)
 
-**Phase 5 â€” Tests & Polish**
+**Phase 5 — Tests & Polish**
 1. Unit + integration tests (both services, 80% coverage)
 2. E2E tests Playwright (Lisere.API workflows only)
 3. Security audit
@@ -734,9 +747,9 @@ Returns `204 No Content`. Returns `400` if quantity is negative.
 - **Language:** Code in English, UI/messages in French
 - **Timezone:** Europe/Paris
 - **Date format:** dd/MM/yyyy HH:mm
-- **Environments:** Dev â†’ Staging â†’ Prod (HTTPS mandatory Staging+)
+- **Environments:** Dev → Staging → Prod (HTTPS mandatory Staging+)
 
 ---
 
-**Version:** 3.2
+**Version:** 3.3
 **Last updated:** February 2026
