@@ -33,42 +33,42 @@ public static class DataSeeder
         // ── Articles — 20 articles couvrant toutes les ClothingFamily ───────
         var articles = new List<Article>
         {
-            // COA – Manteaux
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123450", Family = ClothingFamily.COA, Name = "Manteau Mathilde", ColorOrPrint = "Camel",          AvailableSizes = [Size.XS, Size.S, Size.M, Size.L, Size.XL] },
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123451", Family = ClothingFamily.COA, Name = "Trench Colette",   ColorOrPrint = "Beige",          AvailableSizes = [Size.S, Size.M, Size.L] },
-            // JAC – Vestes
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123452", Family = ClothingFamily.JAC, Name = "Veste Apolline",   ColorOrPrint = "Noir",           AvailableSizes = [Size.XS, Size.S, Size.M, Size.L] },
-            // TSH – T-shirts
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123453", Family = ClothingFamily.TSH, Name = "T-Shirt Léonie",   ColorOrPrint = "Blanc",          AvailableSizes = [Size.XS, Size.S, Size.M, Size.L, Size.XL, Size.XXL] },
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123454", Family = ClothingFamily.TSH, Name = "T-Shirt Léonie",   ColorOrPrint = "Marinière",      AvailableSizes = [Size.S, Size.M, Size.L] },
-            // SWE – Pulls
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123455", Family = ClothingFamily.SWE, Name = "Pull Céleste",     ColorOrPrint = "Marine",         AvailableSizes = [Size.XS, Size.S, Size.M, Size.L] },
-            // VES – Gilets
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123456", Family = ClothingFamily.VES, Name = "Gilet Honorine",   ColorOrPrint = "Crème",          AvailableSizes = [Size.S, Size.M, Size.L, Size.XL] },
-            // JEA – Jeans
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123457", Family = ClothingFamily.JEA, Name = "Jean Victoire",    ColorOrPrint = "Bleu Brut",      AvailableSizes = [Size.XS, Size.S, Size.M, Size.L, Size.XL] },
-            // PAN – Pantalons
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123458", Family = ClothingFamily.PAN, Name = "Pantalon Simone",  ColorOrPrint = "Kaki",           AvailableSizes = [Size.S, Size.M, Size.L, Size.XL] },
-            // SHO – Shorts
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123459", Family = ClothingFamily.SHO, Name = "Short Adèle",      ColorOrPrint = "Blanc",          AvailableSizes = [Size.S, Size.M, Size.L] },
-            // SKI – Jupes
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123460", Family = ClothingFamily.SKI, Name = "Jupe Rosalie",     ColorOrPrint = "Fleurs Ocre",    AvailableSizes = [Size.XS, Size.S, Size.M, Size.L] },
-            // DRE – Robes
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123461", Family = ClothingFamily.DRE, Name = "Robe Emma",        ColorOrPrint = "Rouge",          AvailableSizes = [Size.XS, Size.S, Size.M, Size.L] },
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123462", Family = ClothingFamily.DRE, Name = "Robe Emma",        ColorOrPrint = "Noir",           AvailableSizes = [Size.S, Size.M, Size.L, Size.XL] },
-            // SHI – Chemises
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123463", Family = ClothingFamily.SHI, Name = "Chemise Margaux",  ColorOrPrint = "Bleu Ciel",      AvailableSizes = [Size.S, Size.M, Size.L, Size.XL] },
-            // BLO – Blouses
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123464", Family = ClothingFamily.BLO, Name = "Blouse Hortense",  ColorOrPrint = "Ivoire",         AvailableSizes = [Size.XS, Size.S, Size.M, Size.L] },
-            // SHE – Chaussures
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123465", Family = ClothingFamily.SHE, Name = "Sneakers Ninon",   ColorOrPrint = "Blanc",          AvailableSizes = [Size.S, Size.M, Size.L, Size.XL] },
-            // BEL – Ceintures
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123466", Family = ClothingFamily.BEL, Name = "Ceinture Diane",   ColorOrPrint = "Cognac",         AvailableSizes = [Size.OneSize] },
-            // BAG – Sacs
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123467", Family = ClothingFamily.BAG, Name = "Sac Célimène",     ColorOrPrint = "Écru",           AvailableSizes = [Size.OneSize] },
-            // JEW – Bijoux
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123468", Family = ClothingFamily.JEW, Name = "Collier Aurore",   ColorOrPrint = "Or",             AvailableSizes = [Size.OneSize] },
-            new() { Id = Guid.NewGuid(), Barcode = "3400936123469", Family = ClothingFamily.JEW, Name = "Boucles Céleste",  ColorOrPrint = "Argent",         AvailableSizes = [Size.OneSize] },
+            // COA – Manteaux (~180€)
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123450", Family = ClothingFamily.COA, Name = "Manteau Mathilde", ColorOrPrint = "Camel",          AvailableSizes = [Size.XS, Size.S, Size.M, Size.L, Size.XL],       Price = 185.00m, ImageUrl = "https://placehold.co/400x600?text=Manteau+Mathilde" },
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123451", Family = ClothingFamily.COA, Name = "Trench Colette",   ColorOrPrint = "Beige",          AvailableSizes = [Size.S, Size.M, Size.L],                          Price = 175.00m, ImageUrl = "https://placehold.co/400x600?text=Trench+Colette" },
+            // JAC – Vestes (~110€)
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123452", Family = ClothingFamily.JAC, Name = "Veste Apolline",   ColorOrPrint = "Noir",           AvailableSizes = [Size.XS, Size.S, Size.M, Size.L],                Price = 110.00m, ImageUrl = "https://placehold.co/400x600?text=Veste+Apolline" },
+            // TSH – T-shirts (~45€)
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123453", Family = ClothingFamily.TSH, Name = "T-Shirt Léonie",   ColorOrPrint = "Blanc",          AvailableSizes = [Size.XS, Size.S, Size.M, Size.L, Size.XL, Size.XXL], Price = 45.00m, ImageUrl = "https://placehold.co/400x600?text=T-Shirt+Leonie+Blanc" },
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123454", Family = ClothingFamily.TSH, Name = "T-Shirt Léonie",   ColorOrPrint = "Marinière",      AvailableSizes = [Size.S, Size.M, Size.L],                          Price = 45.00m, ImageUrl = "https://placehold.co/400x600?text=T-Shirt+Leonie+Mariniere" },
+            // SWE – Pulls (~75€)
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123455", Family = ClothingFamily.SWE, Name = "Pull Céleste",     ColorOrPrint = "Marine",         AvailableSizes = [Size.XS, Size.S, Size.M, Size.L],                Price = 75.00m, ImageUrl = "https://placehold.co/400x600?text=Pull+Celeste" },
+            // VES – Gilets (~65€)
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123456", Family = ClothingFamily.VES, Name = "Gilet Honorine",   ColorOrPrint = "Crème",          AvailableSizes = [Size.S, Size.M, Size.L, Size.XL],                Price = 65.00m, ImageUrl = "https://placehold.co/400x600?text=Gilet+Honorine" },
+            // JEA – Jeans (~90€)
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123457", Family = ClothingFamily.JEA, Name = "Jean Victoire",    ColorOrPrint = "Bleu Brut",      AvailableSizes = [Size.XS, Size.S, Size.M, Size.L, Size.XL],       Price = 90.00m, ImageUrl = "https://placehold.co/400x600?text=Jean+Victoire" },
+            // PAN – Pantalons (~85€)
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123458", Family = ClothingFamily.PAN, Name = "Pantalon Simone",  ColorOrPrint = "Kaki",           AvailableSizes = [Size.S, Size.M, Size.L, Size.XL],                Price = 85.00m, ImageUrl = "https://placehold.co/400x600?text=Pantalon+Simone" },
+            // SHO – Shorts (~55€)
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123459", Family = ClothingFamily.SHO, Name = "Short Adèle",      ColorOrPrint = "Blanc",          AvailableSizes = [Size.S, Size.M, Size.L],                          Price = 55.00m, ImageUrl = "https://placehold.co/400x600?text=Short+Adele" },
+            // SKI – Jupes (~70€)
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123460", Family = ClothingFamily.SKI, Name = "Jupe Rosalie",     ColorOrPrint = "Fleurs Ocre",    AvailableSizes = [Size.XS, Size.S, Size.M, Size.L],                Price = 70.00m, ImageUrl = "https://placehold.co/400x600?text=Jupe+Rosalie" },
+            // DRE – Robes (~120€)
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123461", Family = ClothingFamily.DRE, Name = "Robe Emma",        ColorOrPrint = "Rouge",          AvailableSizes = [Size.XS, Size.S, Size.M, Size.L],                Price = 120.00m, ImageUrl = "https://placehold.co/400x600?text=Robe+Emma+Rouge" },
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123462", Family = ClothingFamily.DRE, Name = "Robe Emma",        ColorOrPrint = "Noir",           AvailableSizes = [Size.S, Size.M, Size.L, Size.XL],                Price = 120.00m, ImageUrl = "https://placehold.co/400x600?text=Robe+Emma+Noir" },
+            // SHI – Chemises (~80€)
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123463", Family = ClothingFamily.SHI, Name = "Chemise Margaux",  ColorOrPrint = "Bleu Ciel",      AvailableSizes = [Size.S, Size.M, Size.L, Size.XL],                Price = 80.00m, ImageUrl = "https://placehold.co/400x600?text=Chemise+Margaux" },
+            // BLO – Blouses (~75€)
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123464", Family = ClothingFamily.BLO, Name = "Blouse Hortense",  ColorOrPrint = "Ivoire",         AvailableSizes = [Size.XS, Size.S, Size.M, Size.L],                Price = 75.00m, ImageUrl = "https://placehold.co/400x600?text=Blouse+Hortense" },
+            // SHE – Chaussures (~95€)
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123465", Family = ClothingFamily.SHE, Name = "Sneakers Ninon",   ColorOrPrint = "Blanc",          AvailableSizes = [Size.S, Size.M, Size.L, Size.XL],                Price = 95.00m, ImageUrl = "https://placehold.co/400x600?text=Sneakers+Ninon" },
+            // BEL – Ceintures (~40€)
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123466", Family = ClothingFamily.BEL, Name = "Ceinture Diane",   ColorOrPrint = "Cognac",         AvailableSizes = [Size.OneSize],                                    Price = 40.00m, ImageUrl = "https://placehold.co/400x600?text=Ceinture+Diane" },
+            // BAG – Sacs (~130€)
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123467", Family = ClothingFamily.BAG, Name = "Sac Célimène",     ColorOrPrint = "Écru",           AvailableSizes = [Size.OneSize],                                    Price = 130.00m, ImageUrl = "https://placehold.co/400x600?text=Sac+Celimene" },
+            // JEW – Bijoux (~60€)
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123468", Family = ClothingFamily.JEW, Name = "Collier Aurore",   ColorOrPrint = "Or",             AvailableSizes = [Size.OneSize],                                    Price = 60.00m, ImageUrl = "https://placehold.co/400x600?text=Collier+Aurore" },
+            new() { Id = Guid.NewGuid(), Barcode = "3400936123469", Family = ClothingFamily.JEW, Name = "Boucles Céleste",  ColorOrPrint = "Argent",         AvailableSizes = [Size.OneSize],                                    Price = 55.00m, ImageUrl = "https://placehold.co/400x600?text=Boucles+Celeste" },
         };
 
         // Set audit fields required by BaseEntity

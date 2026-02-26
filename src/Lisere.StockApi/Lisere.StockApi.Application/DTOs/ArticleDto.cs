@@ -13,4 +13,8 @@ public class ArticleDto
     public string ColorOrPrint { get; set; } = string.Empty;
 
     public List<string> AvailableSizes { get; set; } = new();
+
+    public decimal? Price { get; set; }
+
+    public string? ImageUrl { get; set; }
 }
