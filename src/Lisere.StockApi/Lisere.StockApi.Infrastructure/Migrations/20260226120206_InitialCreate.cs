@@ -33,6 +33,20 @@ namespace Lisere.StockApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Stores",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Stores", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "StockEntries",
                 columns: table => new
                 {
@@ -47,20 +61,12 @@ namespace Lisere.StockApi.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_StockEntries", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Stores",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Code = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Type = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Stores", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_StockEntries_Articles_ArticleId",
+                        column: x => x.ArticleId,
+                        principalTable: "Articles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -97,13 +103,13 @@ namespace Lisere.StockApi.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Articles");
-
-            migrationBuilder.DropTable(
                 name: "StockEntries");
 
             migrationBuilder.DropTable(
                 name: "Stores");
+
+            migrationBuilder.DropTable(
+                name: "Articles");
         }
     }
 }

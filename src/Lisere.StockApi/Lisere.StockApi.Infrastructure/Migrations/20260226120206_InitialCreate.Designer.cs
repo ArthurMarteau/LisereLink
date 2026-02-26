@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lisere.StockApi.Infrastructure.Migrations
 {
     [DbContext(typeof(StockApiDbContext))]
-    [Migration("20260223165544_InitialCreate")]
+    [Migration("20260226120206_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -153,6 +153,15 @@ namespace Lisere.StockApi.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Stores");
+                });
+
+            modelBuilder.Entity("Lisere.StockApi.Domain.Entities.StockEntry", b =>
+                {
+                    b.HasOne("Lisere.Domain.Entities.Article", null)
+                        .WithMany()
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

@@ -151,6 +151,15 @@ namespace Lisere.StockApi.Infrastructure.Migrations
 
                     b.ToTable("Stores");
                 });
+
+            modelBuilder.Entity("Lisere.StockApi.Domain.Entities.StockEntry", b =>
+                {
+                    b.HasOne("Lisere.Domain.Entities.Article", null)
+                        .WithMany()
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
 #pragma warning restore 612, 618
         }
     }
