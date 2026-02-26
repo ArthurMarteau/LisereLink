@@ -8,5 +8,5 @@ public interface IExternalStockApiClient
 
     Task<Article?> GetArticleByBarcodeAsync(string barcode, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<Stock>> GetStockAsync(Guid articleId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Stock>> GetStockAsync(Guid articleId, Guid storeId, CancellationToken cancellationToken = default);
 }

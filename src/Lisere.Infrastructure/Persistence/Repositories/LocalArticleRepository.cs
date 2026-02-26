@@ -1,4 +1,5 @@
 using Lisere.Domain.Entities;
+using Lisere.Domain.Enums;
 using Lisere.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,6 +34,41 @@ public class LocalArticleRepository : ILocalArticleRepository
 
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
+    }
+
+    public async Task<(IEnumerable<Article> Items, int TotalCount)> SearchAsync(
+        string? query,
+        ClothingFamily? family,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        pageSize = Math.Min(pageSize, 50);
+        page = Math.Max(page, 1);
+
+        var q = _context.Articles.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var lower = query.ToLower();
+            q = q.Where(a =>
+                a.Name.ToLower().Contains(lower) ||
+                a.Barcode.Contains(query) ||
+                a.ColorOrPrint.ToLower().Contains(lower));
+        }
+
+        if (family.HasValue)
+            q = q.Where(a => a.Family == family.Value);
+
+        q = q.OrderBy(a => a.Family).ThenBy(a => a.Name);
+
+        var totalCount = await q.CountAsync(cancellationToken);
+        var items = await q
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);

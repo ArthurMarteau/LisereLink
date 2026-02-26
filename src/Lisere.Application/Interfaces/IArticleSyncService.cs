@@ -1,4 +1,4 @@
-namespace Lisere.Domain.Interfaces;
+namespace Lisere.Application.Interfaces;
 
 public interface IArticleSyncService
 {
