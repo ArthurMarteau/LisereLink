@@ -21,6 +21,8 @@ namespace Lisere.StockApi.Infrastructure.Migrations
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     ColorOrPrint = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     AvailableSizes = table.Column<string>(type: "nvarchar(200)", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(10,2)", precision: 10, scale: 2, nullable: true),
+                    ImageUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false, defaultValue: ""),
                     ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
