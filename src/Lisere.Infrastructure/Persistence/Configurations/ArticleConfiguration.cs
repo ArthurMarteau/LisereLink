@@ -53,6 +53,12 @@ public class ArticleConfiguration : IEntityTypeConfiguration<Article>
         builder.Property(a => a.ModifiedBy)
             .HasMaxLength(256);
 
+        builder.Property(a => a.Price)
+            .HasPrecision(10, 2);
+
+        builder.Property(a => a.ImageUrl)
+            .HasMaxLength(500);
+
         builder.HasIndex(a => a.Barcode)
             .IsUnique();
 
