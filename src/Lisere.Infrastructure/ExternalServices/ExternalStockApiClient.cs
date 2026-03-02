@@ -1,8 +1,9 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Lisere.Domain.Entities;
-using Lisere.Domain.Enums;
 using Lisere.Domain.Interfaces;
+using Lisere.Infrastructure.ExternalServices.Dtos;
+using Lisere.Infrastructure.ExternalServices.Mappers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -29,10 +30,10 @@ public class ExternalStockApiClient : IExternalStockApiClient
         try
         {
             ForwardJwt();
-            var response = await _httpClient.GetFromJsonAsync<IEnumerable<StockApiArticleResponse>>(
-                "api/articles", cancellationToken) ?? [];
+            var response = await _httpClient.GetFromJsonAsync<PagedArticlesResponse>(
+                "api/articles", cancellationToken);
 
-            return response.Select(MapToArticle);
+            return response?.Items.Select(r => r.MapToArticle()) ?? [];
         }
         catch (Exception ex)
         {
@@ -49,7 +50,7 @@ public class ExternalStockApiClient : IExternalStockApiClient
             var response = await _httpClient.GetFromJsonAsync<StockApiArticleResponse>(
                 $"api/articles/{barcode}", cancellationToken);
 
-            return response is null ? null : MapToArticle(response);
+            return response?.MapToArticle();
         }
         catch (Exception ex)
         {
@@ -67,14 +68,9 @@ public class ExternalStockApiClient : IExternalStockApiClient
         {
             ForwardJwt();
             var response = await _httpClient.GetFromJsonAsync<IEnumerable<StockApiStockEntryResponse>>(
-                $"api/stock?articleId={articleId}&storeId={storeId}", cancellationToken) ?? [];
+                $"api/stock/{articleId}?storeId={storeId}", cancellationToken) ?? [];
 
-            return response.Select(s => new Stock
-            {
-                ArticleId = s.ArticleId,
-                Size = Enum.Parse<Size>(s.Size),
-                AvailableQuantity = s.AvailableQuantity,
-            });
+            return response.Select(s => s.MapToStock());
         }
         catch (Exception ex)
         {
@@ -90,35 +86,4 @@ public class ExternalStockApiClient : IExternalStockApiClient
         if (!string.IsNullOrEmpty(authHeader))
             _httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse(authHeader);
     }
-
-    private static Article MapToArticle(StockApiArticleResponse r) => new()
-    {
-        Id = r.Id,
-        Barcode = r.Barcode,
-        Name = r.Name,
-        Family = Enum.Parse<ClothingFamily>(r.Family),
-        ColorOrPrint = r.ColorOrPrint,
-        AvailableSizes = r.AvailableSizes
-            .Select(s => Enum.Parse<Size>(s))
-            .ToList(),
-        Price = r.Price,
-        ImageUrl = r.ImageUrl,
-    };
-
-    // Internal response shapes matching StockApi JSON
-    private sealed record StockApiArticleResponse(
-        Guid Id,
-        string Barcode,
-        string Name,
-        string Family,
-        string ColorOrPrint,
-        List<string> AvailableSizes,
-        decimal? Price,
-        string? ImageUrl);
-
-    private sealed record StockApiStockEntryResponse(
-        Guid ArticleId,
-        Guid StoreId,
-        string Size,
-        int AvailableQuantity);
 }

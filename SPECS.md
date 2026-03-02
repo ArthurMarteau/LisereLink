@@ -342,6 +342,8 @@ public class Article
     public string Name { get; set; }
     public string ColorOrPrint { get; set; }
     public List<Size> AvailableSizes { get; set; }
+    public decimal? Price { get; set; }      // optional, synced from StockApi
+    public string? ImageUrl { get; set; }    // optional, synced from StockApi
     public DateTime? LastSyncedAt { get; set; } // set by ArticleSyncService
 }
 ```

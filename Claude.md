@@ -113,7 +113,7 @@ npm run test
 
 - `Request` (aggregate root) → has many `RequestLine`
 - `RequestLine` → links Request to Article + size + quantity + status
-- `Article` → clothing item with barcode (EAN-13), family, name, colorOrPrint, LastSyncedAt
+- `Article` → clothing item with barcode (EAN-13), family, name, colorOrPrint, Price (optional), ImageUrl (optional), LastSyncedAt
 - `User` (extends IdentityUser<Guid>) → roles: Seller, Stockist, Admin
 - `Stock` → value object, read-only from Lisere.StockApi, cached in Redis (TTL 30s)
 
