@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using Lisere.Domain.Enums;
+using Lisere.StockApi.Domain.Enums;
 using Lisere.StockApi.Application.DTOs;
 using Xunit;
 

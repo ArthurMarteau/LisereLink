@@ -1,7 +1,10 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Web;
+using Lisere.Application.Common;
+using Lisere.Application.DTOs;
+using Lisere.Application.Interfaces;
 using Lisere.Domain.Entities;
-using Lisere.Domain.Interfaces;
 using Lisere.Infrastructure.ExternalServices.Dtos;
 using Lisere.Infrastructure.ExternalServices.Mappers;
 using Microsoft.AspNetCore.Http;
@@ -25,24 +28,44 @@ public class ExternalStockApiClient : IExternalStockApiClient
         _logger = logger;
     }
 
-    public async Task<IEnumerable<Article>> GetArticlesAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResult<ArticleDto>> SearchArticlesAsync(
+        string? query,
+        string? family,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
     {
         try
         {
             ForwardJwt();
-            var response = await _httpClient.GetFromJsonAsync<PagedArticlesResponse>(
-                "api/articles", cancellationToken);
+            var qs = HttpUtility.ParseQueryString(string.Empty);
+            if (!string.IsNullOrEmpty(query)) qs["query"] = query;
+            if (!string.IsNullOrEmpty(family)) qs["family"] = family;
+            qs["page"] = page.ToString();
+            qs["pageSize"] = pageSize.ToString();
 
-            return response?.Items.Select(r => r.MapToArticle()) ?? [];
+            var response = await _httpClient.GetFromJsonAsync<PagedArticlesResponse>(
+                $"api/articles?{qs}", cancellationToken);
+
+            if (response is null)
+                return new PagedResult<ArticleDto> { Items = [], TotalCount = 0, Page = page, PageSize = pageSize };
+
+            return new PagedResult<ArticleDto>
+            {
+                Items = response.Items.Select(r => r.MapToArticleDto()),
+                TotalCount = response.TotalCount,
+                Page = response.Page,
+                PageSize = response.PageSize,
+            };
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "StockApi indisponible — GetArticlesAsync a échoué.");
-            return [];
+            _logger.LogWarning(ex, "StockApi indisponible — SearchArticlesAsync a échoué.");
+            return new PagedResult<ArticleDto> { Items = [], TotalCount = 0, Page = page, PageSize = pageSize };
         }
     }
 
-    public async Task<Article?> GetArticleByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
+    public async Task<ArticleDto?> GetArticleByBarcodeAsync(string barcode, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -50,7 +73,7 @@ public class ExternalStockApiClient : IExternalStockApiClient
             var response = await _httpClient.GetFromJsonAsync<StockApiArticleResponse>(
                 $"api/articles/{barcode}", cancellationToken);
 
-            return response?.MapToArticle();
+            return response?.MapToArticleDto();
         }
         catch (Exception ex)
         {

@@ -1,5 +1,3 @@
-using Lisere.Domain.Entities;
-using Lisere.Domain.Enums;
 using Lisere.StockApi.Domain.Entities;
 using Lisere.StockApi.Domain.Enums;
 using Lisere.StockApi.Infrastructure.Persistence;
@@ -71,13 +69,9 @@ public static class DataSeeder
             new() { Id = Guid.NewGuid(), Barcode = "3400936123469", Family = ClothingFamily.JEW, Name = "Boucles Céleste",  ColorOrPrint = "Argent",         AvailableSizes = [Size.OneSize],                                    Price = 55.00m, ImageUrl = "https://placehold.co/400x600?text=Boucles+Celeste" },
         };
 
-        // Set audit fields required by BaseEntity
         var now = DateTime.UtcNow;
         foreach (var a in articles)
-        {
-            a.CreatedAt = now;
-            a.CreatedBy = "seeder";
-        }
+            a.LastUpdatedAt = now;
 
         await context.Articles.AddRangeAsync(articles);
         await context.SaveChangesAsync();

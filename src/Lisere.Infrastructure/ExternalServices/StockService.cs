@@ -1,8 +1,6 @@
 using System.Text;
 using System.Text.Json;
 using Lisere.Application.Interfaces;
-using Lisere.Domain.Enums;
-using Lisere.Domain.Interfaces;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -35,7 +33,7 @@ public class StockService : IStockService
 
     public async Task<int> GetAvailabilityAsync(
         Guid articleId,
-        Size size,
+        string size,
         CancellationToken cancellationToken = default)
     {
         var cacheKey = $"stock:{articleId}:{_storeId}:{size}";
@@ -56,7 +54,7 @@ public class StockService : IStockService
 
     public async Task<bool> IsAvailableAsync(
         Guid articleId,
-        Size size,
+        string size,
         CancellationToken cancellationToken = default)
     {
         var quantity = await GetAvailabilityAsync(articleId, size, cancellationToken);

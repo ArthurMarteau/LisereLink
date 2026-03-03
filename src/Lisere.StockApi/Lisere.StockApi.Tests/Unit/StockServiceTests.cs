@@ -1,5 +1,3 @@
-using Lisere.Domain.Entities;
-using Lisere.Domain.Enums;
 using Lisere.StockApi.Application.DTOs;
 using Lisere.StockApi.Application.Exceptions;
 using Lisere.StockApi.Application.Services;
@@ -56,8 +54,7 @@ public class StockServiceTests
             ColorOrPrint = "Noir",
             Family = ClothingFamily.TSH,
             AvailableSizes = [Size.M],
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = "test"
+            LastUpdatedAt = DateTime.UtcNow
         };
 
         _articleRepo.GetByIdAsync(articleId, Arg.Any<CancellationToken>()).Returns(article);

@@ -1,4 +1,4 @@
-using Lisere.Domain.Entities;
+using Lisere.StockApi.Domain.Entities;
 using Lisere.StockApi.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 

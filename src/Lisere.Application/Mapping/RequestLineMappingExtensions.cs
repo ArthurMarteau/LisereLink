@@ -11,19 +11,21 @@ public static class RequestLineMappingExtensions
         Id             = line.Id,
         RequestId      = line.RequestId,
         ArticleId      = line.ArticleId,
-        ColorOrPrint   = line.ColorOrPrint,
-        RequestedSizes = line.RequestedSizes.Select(s => s.ToString()).ToList(),
+        ColorOrPrint   = line.ArticleColorOrPrint,
+        RequestedSizes = line.RequestedSizes.ToList(),
         Quantity       = line.Quantity,
         Status         = line.Status.ToString(),
     };
 
     public static RequestLine ToEntity(this CreateRequestLineDto dto) => new()
     {
-        Id             = Guid.NewGuid(),
-        ArticleId      = dto.ArticleId,
-        ColorOrPrint   = dto.ColorOrPrint,
-        RequestedSizes = dto.RequestedSizes.ToList(),
-        Quantity       = dto.Quantity,
-        Status         = RequestLineStatus.Pending,
+        Id                  = Guid.NewGuid(),
+        ArticleId           = dto.ArticleId,
+        ArticleName         = dto.ArticleName,
+        ArticleColorOrPrint = dto.ArticleColorOrPrint,
+        ArticleBarcode      = dto.ArticleBarcode,
+        RequestedSizes      = dto.RequestedSizes.ToList(),
+        Quantity            = dto.Quantity,
+        Status              = RequestLineStatus.Pending,
     };
 }

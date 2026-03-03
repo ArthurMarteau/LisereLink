@@ -1,5 +1,4 @@
 using Lisere.Domain.Entities;
-using Lisere.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -17,19 +16,25 @@ public class RequestLineConfiguration : IEntityTypeConfiguration<RequestLine>
             .HasConversion<string>()
             .HasMaxLength(20);
 
-        builder.Property(rl => rl.ColorOrPrint)
+        builder.Property(rl => rl.ArticleName)
             .IsRequired()
-            .HasMaxLength(100);
+            .HasMaxLength(200);
 
-        var sizesConverter = new ValueConverter<List<Size>, string>(
-            v => string.Join(',', v.Select(s => s.ToString())),
+        builder.Property(rl => rl.ArticleColorOrPrint)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        builder.Property(rl => rl.ArticleBarcode)
+            .IsRequired()
+            .HasMaxLength(20);
+
+        var sizesConverter = new ValueConverter<List<string>, string>(
+            v => string.Join(',', v),
             v => string.IsNullOrEmpty(v)
-                ? new List<Size>()
-                : v.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                   .Select(s => Enum.Parse<Size>(s))
-                   .ToList());
+                ? new List<string>()
+                : v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
 
-        var sizesComparer = new ValueComparer<List<Size>>(
+        var sizesComparer = new ValueComparer<List<string>>(
             (c1, c2) => c1!.SequenceEqual(c2!),
             c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
             c => c.ToList());
@@ -44,11 +49,6 @@ public class RequestLineConfiguration : IEntityTypeConfiguration<RequestLine>
 
         builder.Property(rl => rl.ModifiedBy)
             .HasMaxLength(256);
-
-        builder.HasOne(rl => rl.Article)
-            .WithMany()
-            .HasForeignKey(rl => rl.ArticleId)
-            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasQueryFilter(rl => !rl.IsDeleted);
     }

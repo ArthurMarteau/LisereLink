@@ -6,8 +6,5 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Lisere.Domain\Lisere.Domain.csproj" />
-  </ItemGroup>
 
 </Project>

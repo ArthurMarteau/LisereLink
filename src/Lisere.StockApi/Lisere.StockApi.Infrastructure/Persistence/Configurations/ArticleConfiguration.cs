@@ -1,5 +1,5 @@
-using Lisere.Domain.Entities;
-using Lisere.Domain.Enums;
+using Lisere.StockApi.Domain.Entities;
+using Lisere.StockApi.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -46,19 +46,14 @@ public class ArticleConfiguration : IEntityTypeConfiguration<Article>
             .HasConversion(sizesConverter, sizesComparer)
             .HasColumnType("nvarchar(200)");
 
-        // Audit fields — présents dans BaseEntity mais non enforced ici (StockApi est la source de vérité)
-        builder.Property(a => a.CreatedBy)
-            .HasMaxLength(256)
-            .HasDefaultValue(string.Empty);
-
-        builder.Property(a => a.ModifiedBy)
-            .HasMaxLength(256);
-
         builder.Property(a => a.Price)
             .HasPrecision(10, 2);
 
         builder.Property(a => a.ImageUrl)
             .HasMaxLength(500);
+
+        builder.Property(a => a.LastUpdatedAt)
+            .IsRequired();
 
         builder.HasIndex(a => a.Barcode)
             .IsUnique();

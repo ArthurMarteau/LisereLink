@@ -1,6 +1,4 @@
 using System.Text;
-using Lisere.Domain.Entities;
-using Lisere.Domain.Enums;
 using Lisere.StockApi.Domain.Entities;
 using Lisere.StockApi.Domain.Enums;
 using Lisere.StockApi.Infrastructure.Persistence;
@@ -91,8 +89,7 @@ public class StockApiWebApplicationFactory : WebApplicationFactory<Program>, IAs
             Name = "Robe Rouge",
             ColorOrPrint = "Rouge",
             AvailableSizes = [Size.S, Size.M, Size.L],
-            CreatedAt = now,
-            CreatedBy = "test-seeder"
+            LastUpdatedAt = now
         };
         await db.Articles.AddAsync(article);
 

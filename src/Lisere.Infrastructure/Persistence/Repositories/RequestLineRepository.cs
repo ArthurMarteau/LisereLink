@@ -16,7 +16,6 @@ public class RequestLineRepository : IRequestLineRepository
     public async Task<RequestLine?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.RequestLines
-            .Include(rl => rl.Article)
             .Include(rl => rl.Request)
                 .ThenInclude(r => r.Seller)
             .FirstOrDefaultAsync(rl => rl.Id == id, cancellationToken);
@@ -31,7 +30,6 @@ public class RequestLineRepository : IRequestLineRepository
         page = Math.Max(page, 1);
 
         var query = _context.RequestLines
-            .Include(rl => rl.Article)
             .Include(rl => rl.Request)
             .OrderByDescending(rl => rl.CreatedAt);
 
@@ -73,7 +71,6 @@ public class RequestLineRepository : IRequestLineRepository
         CancellationToken cancellationToken = default)
     {
         return await _context.RequestLines
-            .Include(rl => rl.Article)
             .Where(rl => rl.RequestId == requestId)
             .OrderBy(rl => rl.CreatedAt)
             .ToListAsync(cancellationToken);

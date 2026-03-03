@@ -6,7 +6,66 @@ namespace Lisere.StockApi.Domain.Entities;
 /// Source de vérité pour les articles — appartient à Lisere.StockApi.
 /// Pas de BaseEntity : suppression physique, LastUpdatedAt uniquement (pas d'audit trail complet).
 /// </summary>
-public class Article
+public class 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    Article
 {
     public Guid Id { get; set; }
     public string Barcode { get; set; } = string.Empty;

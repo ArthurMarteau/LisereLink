@@ -1,4 +1,3 @@
-using Lisere.Domain.Enums;
 using Lisere.StockApi.Domain.Enums;
 
 namespace Lisere.StockApi.Application.DTOs;

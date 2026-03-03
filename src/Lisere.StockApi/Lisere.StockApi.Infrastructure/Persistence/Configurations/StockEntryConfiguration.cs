@@ -1,5 +1,4 @@
 using Lisere.StockApi.Domain.Entities;
-using Lisere.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

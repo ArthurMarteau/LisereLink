@@ -1,4 +1,3 @@
-using Lisere.Domain.Enums;
 using Lisere.StockApi.Domain.Enums;
 
 namespace Lisere.StockApi.Domain.Entities;
@@ -14,10 +13,7 @@ public class StockEntry
     public int AvailableQuantity { get; set; }
 
     public StoreType StoreType { get; set; }
-
-    /// <summary>
-    /// Slug identifiant le magasin (ex: "paris-opera"). Correspond à Store.Code.
-    /// </summary>
+    
     public string StoreId { get; set; } = string.Empty;
 
     public DateTime LastUpdatedAt { get; set; }

@@ -1,4 +1,3 @@
-using Lisere.Domain.Entities;
 using Lisere.StockApi.Application.Common;
 using Lisere.StockApi.Application.DTOs;
 using Lisere.StockApi.Application.Exceptions;

@@ -19,7 +19,4 @@ public class ArticleDto
     public decimal? Price { get; set; }
 
     public string? ImageUrl { get; set; }
-
-    /// <summary>Correspond à Article.ModifiedAt — dernière synchronisation depuis le StockApi.</summary>
-    public DateTime? LastSyncedAt { get; set; }
 }

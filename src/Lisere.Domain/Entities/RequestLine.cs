@@ -8,9 +8,13 @@ public class RequestLine : BaseEntity
 
     public Guid ArticleId { get; set; }
 
-    public string ColorOrPrint { get; set; } = string.Empty;
+    public string ArticleName { get; set; } = string.Empty;
 
-    public List<Size> RequestedSizes { get; set; } = new();
+    public string ArticleColorOrPrint { get; set; } = string.Empty;
+
+    public string ArticleBarcode { get; set; } = string.Empty;
+
+    public List<string> RequestedSizes { get; set; } = new();
 
     public int Quantity { get; set; }
 
@@ -18,6 +22,4 @@ public class RequestLine : BaseEntity
 
     // Navigation properties
     public Request Request { get; set; } = null!;
-
-    public Article Article { get; set; } = null!;
 }

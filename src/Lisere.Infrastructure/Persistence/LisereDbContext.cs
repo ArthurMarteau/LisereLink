@@ -13,7 +13,6 @@ public class LisereDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
 
     public DbSet<Request> Requests => Set<Request>();
     public DbSet<RequestLine> RequestLines => Set<RequestLine>();
-    public DbSet<Article> Articles => Set<Article>();
     public DbSet<Stock> Stocks => Set<Stock>();
 
     protected override void OnModelCreating(ModelBuilder builder)

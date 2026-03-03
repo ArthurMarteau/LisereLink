@@ -1,4 +1,4 @@
-using Lisere.Domain.Entities;
+using Lisere.StockApi.Domain.Entities;
 
 namespace Lisere.StockApi.Domain.Interfaces;
 

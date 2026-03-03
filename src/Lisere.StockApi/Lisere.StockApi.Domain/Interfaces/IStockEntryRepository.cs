@@ -1,5 +1,5 @@
-using Lisere.Domain.Enums;
 using Lisere.StockApi.Domain.Entities;
+using Lisere.StockApi.Domain.Enums;
 
 namespace Lisere.StockApi.Domain.Interfaces;
 

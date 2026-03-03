@@ -5,7 +5,9 @@
       "Bash(dir:*)",
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd domain repository interfaces and IStockService\n\nDefine IRequestRepository, IArticleRepository, IRequestLineRepository\nwith async CRUD + pagination, and IStockService for stock availability.\nEach includes CancellationToken support and domain-specific queries\n\\(GetPendingByZoneAsync, GetByBarcodeAsync, GetByRequestIdAsync\\).\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(dotnet restore:*)"
+      "Bash(dotnet restore:*)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet ef:*)"
     ]
   }
 }

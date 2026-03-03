@@ -11,12 +11,6 @@ public class StockConfiguration : IEntityTypeConfiguration<Stock>
         builder.HasKey(s => new { s.ArticleId, s.Size });
 
         builder.Property(s => s.Size)
-            .HasConversion<string>()
             .HasMaxLength(10);
-
-        builder.HasOne(s => s.Article)
-            .WithMany()
-            .HasForeignKey(s => s.ArticleId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }
