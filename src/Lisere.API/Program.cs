@@ -1,50 +1,23 @@
-using Lisere.Application.Interfaces;
-using Lisere.Application.Services;
-using Lisere.Domain.Interfaces;
-using Lisere.Infrastructure.ExternalServices;
-using Lisere.Infrastructure.Persistence;
-using Lisere.Infrastructure.Persistence.Repositories;
-using Microsoft.EntityFrameworkCore;
+using Lisere.Application;
+using Lisere.Infrastructure;
+using Lisere.API.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddApplicationServices();
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
-// Database
-builder.Services.AddDbContext<LisereDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Repositories
-builder.Services.AddScoped<IRequestRepository, RequestRepository>();
-builder.Services.AddScoped<IRequestLineRepository, RequestLineRepository>();
-
-// External API client (typed HttpClient)
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddHttpClient<IExternalStockApiClient, ExternalStockApiClient>(client =>
+if (builder.Environment.IsDevelopment())
 {
-    client.BaseAddress = new Uri(
-        builder.Configuration["ExternalStockApi:BaseUrl"] ?? "https://localhost:5200");
-});
-
-// Redis distributed cache
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("Redis");
-});
-
-// Application services
-builder.Services.AddScoped<IArticleService, ArticleService>();
-builder.Services.AddScoped<IRequestService, RequestService>();
-builder.Services.AddScoped<IStockService, StockService>();
+    builder.Services.AddOpenApi();
+}
 
 var app = builder.Build();
 
 app.UseDefaultFiles();
 app.MapStaticAssets();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -52,6 +25,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

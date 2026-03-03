@@ -4,7 +4,6 @@ using System.Web;
 using Lisere.Application.Common;
 using Lisere.Application.DTOs;
 using Lisere.Application.Interfaces;
-using Lisere.Domain.Entities;
 using Lisere.Infrastructure.ExternalServices.Dtos;
 using Lisere.Infrastructure.ExternalServices.Mappers;
 using Microsoft.AspNetCore.Http;
@@ -82,7 +81,7 @@ public class ExternalStockApiClient : IExternalStockApiClient
         }
     }
 
-    public async Task<IEnumerable<Stock>> GetStockAsync(
+    public async Task<IEnumerable<StockDto>> GetStockAsync(
         Guid articleId,
         Guid storeId,
         CancellationToken cancellationToken = default)
@@ -93,7 +92,7 @@ public class ExternalStockApiClient : IExternalStockApiClient
             var response = await _httpClient.GetFromJsonAsync<IEnumerable<StockApiStockEntryResponse>>(
                 $"api/stock/{articleId}?storeId={storeId}", cancellationToken) ?? [];
 
-            return response.Select(s => s.MapToStock());
+            return response.Select(s => s.MapToStockDto());
         }
         catch (Exception ex)
         {
