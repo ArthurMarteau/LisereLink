@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace Lisere.Infrastructure.Persistence.Configurations;
+namespace Lisere.StockApi.Infrastructure.Persistence.Configurations;
 
 public class ArticleConfiguration : IEntityTypeConfiguration<Article>
 {
@@ -46,9 +46,10 @@ public class ArticleConfiguration : IEntityTypeConfiguration<Article>
             .HasConversion(sizesConverter, sizesComparer)
             .HasColumnType("nvarchar(200)");
 
+        // Audit fields — présents dans BaseEntity mais non enforced ici (StockApi est la source de vérité)
         builder.Property(a => a.CreatedBy)
-            .IsRequired()
-            .HasMaxLength(256);
+            .HasMaxLength(256)
+            .HasDefaultValue(string.Empty);
 
         builder.Property(a => a.ModifiedBy)
             .HasMaxLength(256);
@@ -62,6 +63,6 @@ public class ArticleConfiguration : IEntityTypeConfiguration<Article>
         builder.HasIndex(a => a.Barcode)
             .IsUnique();
 
-        builder.HasQueryFilter(a => !a.IsDeleted);
+        // Pas de HasQueryFilter : StockApi gère le cycle de vie des articles (suppression physique)
     }
 }

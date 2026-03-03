@@ -1,0 +1,41 @@
+using Lisere.StockApi.Application.Common;
+using Lisere.StockApi.Application.DTOs;
+using Lisere.StockApi.Application.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Lisere.StockApi.API.Controllers;
+
+[ApiController]
+[Route("api/articles")]
+public class ArticlesController : ControllerBase
+{
+    private readonly IStockService _stockService;
+
+    public ArticlesController(IStockService stockService)
+    {
+        _stockService = stockService;
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _stockService.GetArticlesAsync(page, pageSize, cancellationToken);
+        return Ok(result);
+    }
+    
+    [HttpGet("{barcode}")]
+    public async Task<IActionResult> GetByBarcode(
+        string barcode,
+        CancellationToken cancellationToken = default)
+    {
+        var article = await _stockService.GetArticleByBarcodeAsync(barcode, cancellationToken);
+
+        if (article is null)
+            return NotFound();
+
+        return Ok(article);
+    }
+}
