@@ -22,10 +22,6 @@ public class AdminStockController : ControllerBase
     /// JWT + rôle Admin requis.
     /// </summary>
     [HttpPut("stock")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> UpdateStock(
         [FromBody] UpdateStockDto dto,
         CancellationToken cancellationToken = default)

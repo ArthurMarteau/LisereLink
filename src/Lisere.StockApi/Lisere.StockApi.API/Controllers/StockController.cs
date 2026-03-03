@@ -15,11 +15,8 @@ public class StockController : ControllerBase
     {
         _stockService = stockService;
     }
-
-    /// <summary>GET /api/stock/{articleId}?storeId=paris-opera — Stocks par taille pour un article.</summary>
+    
     [HttpGet("{articleId:guid}")]
-    [ProducesResponseType(typeof(IEnumerable<StockEntryDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetByArticle(
         Guid articleId,
         [FromQuery] string storeId,
@@ -36,11 +33,8 @@ public class StockController : ControllerBase
         var stock = await _stockService.GetStockAsync(articleId, storeId, cancellationToken);
         return Ok(stock);
     }
-
-    /// <summary>GET /api/stock/articles?storeId=paris-opera&amp;page=1&amp;pageSize=50 — Tous articles + stock pour un magasin.</summary>
+    
     [HttpGet("articles")]
-    [ProducesResponseType(typeof(PagedResult<ArticleStockDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetByStore(
         [FromQuery] string storeId,
         [FromQuery] int page = 1,
