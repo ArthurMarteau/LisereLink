@@ -144,23 +144,6 @@ namespace Lisere.Infrastructure.Migrations
                     b.ToTable("RequestLines");
                 });
 
-            modelBuilder.Entity("Lisere.Domain.Entities.Stock", b =>
-                {
-                    b.Property<Guid>("ArticleId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Size")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<int>("AvailableQuantity")
-                        .HasColumnType("int");
-
-                    b.HasKey("ArticleId", "Size");
-
-                    b.ToTable("Stocks");
-                });
-
             modelBuilder.Entity("Lisere.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")

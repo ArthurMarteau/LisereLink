@@ -43,9 +43,14 @@ public class ExceptionHandlingMiddleware
         if (statusCode == StatusCodes.Status500InternalServerError)
             _logger.LogError(exception, "Unhandled exception occurred");
 
-        var detail = statusCode == StatusCodes.Status500InternalServerError && !_env.IsDevelopment()
-            ? "Une erreur interne est survenue."
-            : exception.Message;
+        var detail = statusCode switch
+        {
+            StatusCodes.Status500InternalServerError when _env.IsDevelopment()
+                => $"{exception.Message}{Environment.NewLine}{exception.StackTrace}",
+            StatusCodes.Status500InternalServerError
+                => "Une erreur interne est survenue.",
+            _ => exception.Message
+        };
 
         var problemDetails = new ProblemDetails
         {
