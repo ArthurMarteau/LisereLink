@@ -16,4 +16,6 @@ public interface IRequestRepository
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<Request>> GetPendingByZoneAsync(ZoneType zone, CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<Request>> GetExpiredPendingAsync(DateTime threshold, CancellationToken cancellationToken = default);
 }

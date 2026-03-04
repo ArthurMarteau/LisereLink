@@ -2,6 +2,7 @@ using System.Text;
 using Lisere.Application.Interfaces;
 using Lisere.Domain.Entities;
 using Lisere.Domain.Interfaces;
+using Lisere.Infrastructure.BackgroundJobs;
 using Lisere.Infrastructure.ExternalServices;
 using Lisere.Infrastructure.Identity;
 using Lisere.Infrastructure.Persistence;
@@ -59,6 +60,9 @@ public static class DependencyInjection
         // SignalR
         services.AddSignalR();
         services.AddScoped<INotificationService, NotificationService>();
+
+        // Background jobs
+        services.AddHostedService<RequestTimeoutService>();
 
         // Identity
         services.AddIdentity<User, IdentityRole<Guid>>()

@@ -6,6 +6,7 @@ using Lisere.Application.Services;
 using Lisere.Domain.Entities;
 using Lisere.Domain.Enums;
 using Lisere.Domain.Interfaces;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
 namespace Lisere.Tests.Application.Services;
@@ -14,13 +15,19 @@ public class RequestServiceTests
 {
     private readonly IRequestRepository _repository;
     private readonly IStockService _stockService;
+    private readonly INotificationService _notificationService;
     private readonly RequestService _sut;
 
     public RequestServiceTests()
     {
         _repository = Substitute.For<IRequestRepository>();
         _stockService = Substitute.For<IStockService>();
-        _sut = new RequestService(_repository, _stockService);
+        _notificationService = Substitute.For<INotificationService>();
+        _sut = new RequestService(
+            _repository,
+            _stockService,
+            _notificationService,
+            NullLogger<RequestService>.Instance);
     }
 
     // -------------------------------------------------------------------------
