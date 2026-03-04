@@ -7,10 +7,12 @@ using Lisere.Infrastructure.Identity;
 using Lisere.Infrastructure.Persistence;
 using Lisere.Infrastructure.Persistence.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Lisere.Infrastructure;
@@ -19,11 +21,15 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IWebHostEnvironment env)
     {
-        // Database
-        services.AddDbContext<LisereDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+        // Database — skipped en environnement "Test" : WebApplicationFactory injecte sa propre base InMemory
+        if (!env.IsEnvironment("Test"))
+        {
+            services.AddDbContext<LisereDbContext>(options =>
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+        }
 
         // Repositories
         services.AddScoped<IRequestRepository, RequestRepository>();
