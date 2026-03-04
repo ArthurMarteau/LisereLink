@@ -3,6 +3,7 @@ using Lisere.Application.Interfaces;
 using Lisere.Domain.Entities;
 using Lisere.Domain.Interfaces;
 using Lisere.Infrastructure.ExternalServices;
+using Lisere.Infrastructure.Identity;
 using Lisere.Infrastructure.Persistence;
 using Lisere.Infrastructure.Persistence.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -44,6 +45,9 @@ public static class DependencyInjection
 
         // Stock service
         services.AddScoped<IStockService, StockService>();
+
+        // Auth service
+        services.AddScoped<IAuthService, AuthService>();
 
         // Identity
         services.AddIdentity<User, IdentityRole<Guid>>()

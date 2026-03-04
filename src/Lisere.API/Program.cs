@@ -1,5 +1,6 @@
 using Lisere.Application;
 using Lisere.Infrastructure;
+using Lisere.Infrastructure.Identity;
 using Lisere.API.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +15,8 @@ if (builder.Environment.IsDevelopment())
 }
 
 var app = builder.Build();
+
+await RoleSeeder.SeedRolesAsync(app.Services);
 
 app.UseDefaultFiles();
 app.MapStaticAssets();

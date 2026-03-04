@@ -37,6 +37,7 @@ public class ExceptionHandlingMiddleware
         {
             BusinessException => (StatusCodes.Status400BadRequest, "Requête invalide"),
             KeyNotFoundException => (StatusCodes.Status404NotFound, "Ressource introuvable"),
+            UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Non autorisé"),
             _ => (StatusCodes.Status500InternalServerError, "Une erreur interne est survenue")
         };
 
