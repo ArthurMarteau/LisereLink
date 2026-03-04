@@ -6,6 +6,7 @@ using Lisere.Infrastructure.ExternalServices;
 using Lisere.Infrastructure.Identity;
 using Lisere.Infrastructure.Persistence;
 using Lisere.Infrastructure.Persistence.Repositories;
+using Lisere.Infrastructure.SignalR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -54,6 +55,10 @@ public static class DependencyInjection
 
         // Auth service
         services.AddScoped<IAuthService, AuthService>();
+
+        // SignalR
+        services.AddSignalR();
+        services.AddScoped<INotificationService, NotificationService>();
 
         // Identity
         services.AddIdentity<User, IdentityRole<Guid>>()

@@ -3,6 +3,7 @@ using System.Threading.RateLimiting;
 using Lisere.Application;
 using Lisere.Infrastructure;
 using Lisere.Infrastructure.Identity;
+using Lisere.Infrastructure.SignalR;
 using Lisere.API.Middlewares;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -82,6 +83,8 @@ app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.MapFallbackToFile("/index.html");
 
