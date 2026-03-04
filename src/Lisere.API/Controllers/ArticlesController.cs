@@ -3,12 +3,14 @@ using Lisere.Application.DTOs;
 using Lisere.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Lisere.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[EnableRateLimiting("fixed")]
 public class ArticlesController : ControllerBase
 {
     private readonly IArticleService _articleService;
@@ -20,7 +22,6 @@ public class ArticlesController : ControllerBase
 
     /// <summary>Recherche paginée d'articles depuis Lisere.StockApi.</summary>
     [HttpGet]
-    [ProducesResponseType(typeof(PagedResult<ArticleDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResult<ArticleDto>>> Search(
         [FromQuery] string? query = null,
         [FromQuery] string? family = null,
@@ -34,8 +35,6 @@ public class ArticlesController : ControllerBase
 
     /// <summary>Récupère un article par son code-barres EAN-13.</summary>
     [HttpGet("{barcode}")]
-    [ProducesResponseType(typeof(ArticleDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ArticleDto>> GetByBarcode(
         string barcode,
         CancellationToken cancellationToken = default)

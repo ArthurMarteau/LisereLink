@@ -3,12 +3,14 @@ using Lisere.Application.DTOs;
 using Lisere.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Lisere.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[EnableRateLimiting("fixed")]
 public class RequestsController : ControllerBase
 {
     private readonly IRequestService _requestService;
@@ -20,7 +22,6 @@ public class RequestsController : ControllerBase
 
     /// <summary>Liste paginée des demandes, filtrable par zone et statut.</summary>
     [HttpGet]
-    [ProducesResponseType(typeof(PagedResult<RequestDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResult<RequestDto>>> GetAll(
         [FromQuery] string? zone = null,
         [FromQuery] string? status = null,
@@ -34,8 +35,6 @@ public class RequestsController : ControllerBase
 
     /// <summary>Récupère une demande par son identifiant.</summary>
     [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(RequestDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<RequestDto>> GetById(
         Guid id,
         CancellationToken cancellationToken = default)
