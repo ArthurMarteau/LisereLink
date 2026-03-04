@@ -16,6 +16,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
 
 namespace Lisere.Infrastructure;
 
@@ -50,6 +51,11 @@ public static class DependencyInjection
         {
             options.Configuration = configuration.GetConnectionString("Redis");
         });
+
+        // Redis IConnectionMultiplexer — pour les opérations par pattern (webhooks)
+        services.AddSingleton<IConnectionMultiplexer>(_ =>
+            ConnectionMultiplexer.Connect(
+                configuration.GetConnectionString("Redis") ?? "localhost:6379"));
 
         // Stock service
         services.AddScoped<IStockService, StockService>();

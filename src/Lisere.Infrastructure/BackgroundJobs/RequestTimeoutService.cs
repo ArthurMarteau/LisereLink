@@ -31,7 +31,7 @@ public class RequestTimeoutService : BackgroundService
         }
     }
 
-    private async Task ProcessExpiredRequestsAsync(CancellationToken cancellationToken)
+    internal async Task ProcessExpiredRequestsAsync(CancellationToken cancellationToken = default)
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
         var repository = scope.ServiceProvider.GetRequiredService<IRequestRepository>();

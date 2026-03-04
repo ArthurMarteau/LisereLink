@@ -8,6 +8,7 @@ using Lisere.StockApi.Application.Services;
 using Lisere.StockApi.Domain.Interfaces;
 using Lisere.StockApi.Infrastructure.Persistence;
 using Lisere.StockApi.Infrastructure.Persistence.Repositories;
+using Lisere.StockApi.Infrastructure.Webhooks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,10 @@ if (!builder.Environment.IsEnvironment("Test"))
 builder.Services.AddScoped<IArticleRepo, ArticleRepo>();
 builder.Services.AddScoped<IStockEntryRepository, StockEntryRepository>();
 builder.Services.AddScoped<IStoreRepository, StoreRepository>();
+
+// ── Webhook notifier ──────────────────────────────────────────────────────────
+builder.Services.Configure<WebhookOptions>(builder.Configuration.GetSection("Webhooks"));
+builder.Services.AddHttpClient<IWebhookNotifier, WebhookNotifier>();
 
 // ── Services ──────────────────────────────────────────────────────────────────
 builder.Services.AddScoped<IStockService, StockService>();

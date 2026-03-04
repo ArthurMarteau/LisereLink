@@ -13,15 +13,18 @@ public class StockService : IStockService
     private readonly IStockEntryRepository _stockEntryRepository;
     private readonly IStoreRepository _storeRepository;
     private readonly IArticleRepository _articleRepository;
+    private readonly IWebhookNotifier _webhookNotifier;
 
     public StockService(
         IStockEntryRepository stockEntryRepository,
         IStoreRepository storeRepository,
-        IArticleRepository articleRepository)
+        IArticleRepository articleRepository,
+        IWebhookNotifier webhookNotifier)
     {
         _stockEntryRepository = stockEntryRepository;
         _storeRepository = storeRepository;
         _articleRepository = articleRepository;
+        _webhookNotifier = webhookNotifier;
     }
 
     public async Task<IEnumerable<StockEntryDto>> GetStockAsync(
@@ -99,6 +102,7 @@ public class StockService : IStockService
         };
 
         await _stockEntryRepository.UpsertAsync(entry, cancellationToken);
+        await _webhookNotifier.NotifyStockUpdatedAsync(dto.ArticleId, dto.StoreId);
     }
 
     public async Task<PagedResult<ArticleDto>> GetArticlesAsync(
