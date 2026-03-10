@@ -7,7 +7,9 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd domain repository interfaces and IStockService\n\nDefine IRequestRepository, IArticleRepository, IRequestLineRepository\nwith async CRUD + pagination, and IStockService for stock availability.\nEach includes CancellationToken support and domain-specific queries\n\\(GetPendingByZoneAsync, GetByBarcodeAsync, GetByRequestIdAsync\\).\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(dotnet restore:*)",
       "Bash(dotnet test:*)",
-      "Bash(dotnet ef:*)"
+      "Bash(dotnet ef:*)",
+      "Bash(python3 -c \"\nimport xml.etree.ElementTree as ET\ntree = ET.parse\\('C:/Users/Jasha/source/repos/LisereLink/src/Lisere.Tests/TestResults/855de137-89f4-422a-8655-e8d0b74fe81d/coverage.cobertura.xml'\\)\nroot = tree.getroot\\(\\)\nfor pkg in root.findall\\('.//package'\\):\n    name = pkg.get\\('name'\\)\n    rate = float\\(pkg.get\\('line-rate', 0\\)\\)\n    print\\(f'{rate*100:5.1f}%  {name}'\\)\n\")",
+      "Bash(grep -E '<class name' \"C:/Users/Jasha/source/repos/LisereLink/src/Lisere.Tests/TestResults/855de137-89f4-422a-8655-e8d0b74fe81d/coverage.cobertura.xml\" | awk -F'\"' '{\n    for\\(i=1;i<=NF;i++\\) if\\($i~/line-rate/\\) { rate=$\\(i+1\\); printf \"%.0f%%  %s\\\\n\", rate*100, $2; break }\n}' | sort -t'%' -k1 -n | head -30)"
     ]
   }
 }

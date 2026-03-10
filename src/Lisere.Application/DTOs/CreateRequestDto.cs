@@ -11,5 +11,7 @@ public class CreateRequestDto
     [Required]
     public ZoneType Zone { get; set; }
 
+    [Required]
+    [MinLength(1)]
     public List<CreateRequestLineDto> Lines { get; set; } = new();
 }

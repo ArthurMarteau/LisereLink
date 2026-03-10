@@ -157,6 +157,35 @@ public class RequestServiceTests
     }
 
     // -------------------------------------------------------------------------
+    // GetByIdAsync
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task GetByIdAsync_WhenFound_ReturnsMappedDto()
+    {
+        var request = BuildRequest(RequestStatus.Pending);
+        _repository.GetByIdAsync(request.Id, Arg.Any<CancellationToken>())
+            .Returns(request);
+
+        var result = await _sut.GetByIdAsync(request.Id);
+
+        Assert.NotNull(result);
+        Assert.Equal(request.Id, result.Id);
+        Assert.Equal(request.SellerId, result.SellerId);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WhenNotFound_ReturnsNull()
+    {
+        _repository.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns((Domain.Entities.Request?)null);
+
+        var result = await _sut.GetByIdAsync(Guid.NewGuid());
+
+        Assert.Null(result);
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 

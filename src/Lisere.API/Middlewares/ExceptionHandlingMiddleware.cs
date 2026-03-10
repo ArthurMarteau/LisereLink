@@ -64,6 +64,6 @@ public class ExceptionHandlingMiddleware
 
         context.Response.StatusCode = statusCode;
         context.Response.ContentType = "application/problem+json";
-        await context.Response.WriteAsJsonAsync(problemDetails);
+        await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(problemDetails));
     }
 }
