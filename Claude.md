@@ -21,7 +21,7 @@ PWA for managing clothing requests between sellers and stockists in retail store
 ### Lisere.StockApi (autonomous stock service — already implemented)
 - **Backend:** .NET 10, EF Core (Code First), SQL Server (separate DB), port 5200
 - **Architecture:** Clean Architecture (Domain → Application → Infrastructure → API)
-- **Shared:** Lisere.Domain (enums + Article entity)
+- **Shared:** Lisere.Domain (enums only — Article is NOT a shared entity)
 
 ---
 
@@ -112,13 +112,16 @@ npm run test
 ## Key Entities (Lisere.Domain — shared)
 
 - `Request` (aggregate root) → has many `RequestLine`
-- `RequestLine` → links Request to Article + size + quantity + status
-- `Article` → clothing item with barcode (EAN-13), family, name, colorOrPrint, Price (optional), ImageUrl (optional), LastSyncedAt
+- `RequestLine` → links Request to ArticleId (Guid) + size + quantity + status — NO navigation to Article entity
 - `User` (extends IdentityUser<Guid>) → roles: Seller, Stockist, Admin
 - `Stock` → value object, read-only from Lisere.StockApi, cached in Redis (TTL 30s)
 
+> ⚠️ `Article` is NOT an entity in Lisere.Domain. It is represented solely by `ArticleDto` in Lisere.Application.DTOs.
+> Articles are fetched live from Lisere.StockApi via `IExternalStockApiClient`. No DbSet<Article> in LisereDbContext.
+
 ## Key Entities (Lisere.StockApi.Domain)
 
+- `Article` → source of truth for articles (Barcode, Family, Name, ColorOrPrint, AvailableSizes, Price?, ImageUrl?, LastUpdatedAt) — NO BaseEntity, physical delete only
 - `StockEntry` → article + size + quantity + store (LastUpdatedAt only)
 - `Store` → physical store or online
 

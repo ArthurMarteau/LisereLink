@@ -2,11 +2,13 @@ using Lisere.StockApi.Application.Common;
 using Lisere.StockApi.Application.DTOs;
 using Lisere.StockApi.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Lisere.StockApi.API.Controllers;
 
 [ApiController]
 [Route("api/stock")]
+[EnableRateLimiting("fixed")]
 public class StockController : ControllerBase
 {
     private readonly IStockService _stockService;

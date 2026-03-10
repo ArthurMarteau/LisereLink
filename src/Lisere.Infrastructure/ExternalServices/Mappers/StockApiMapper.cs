@@ -1,5 +1,4 @@
 using Lisere.Application.DTOs;
-using Lisere.Domain.Entities;
 using Lisere.Infrastructure.ExternalServices.Dtos;
 
 namespace Lisere.Infrastructure.ExternalServices.Mappers;
@@ -18,10 +17,11 @@ internal static class StockApiMapper
         ImageUrl     = r.ImageUrl,
     };
 
-    public static Stock MapToStock(this StockApiStockEntryResponse s) => new()
+    public static StockDto MapToStockDto(this StockApiStockEntryResponse s) => new()
     {
         ArticleId         = s.ArticleId,
         Size              = s.Size,
+        StoreId           = s.StoreId.ToString(),
         AvailableQuantity = s.AvailableQuantity,
     };
 }

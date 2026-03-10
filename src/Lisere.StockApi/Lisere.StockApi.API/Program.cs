@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using System.Text;
+using System.Threading.RateLimiting;
 using Lisere.StockApi.API.Data;
 using Lisere.StockApi.API.Middlewares;
 using Lisere.StockApi.Application.Interfaces;
@@ -6,7 +8,9 @@ using Lisere.StockApi.Application.Services;
 using Lisere.StockApi.Domain.Interfaces;
 using Lisere.StockApi.Infrastructure.Persistence;
 using Lisere.StockApi.Infrastructure.Persistence.Repositories;
+using Lisere.StockApi.Infrastructure.Webhooks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -28,6 +32,10 @@ if (!builder.Environment.IsEnvironment("Test"))
 builder.Services.AddScoped<IArticleRepo, ArticleRepo>();
 builder.Services.AddScoped<IStockEntryRepository, StockEntryRepository>();
 builder.Services.AddScoped<IStoreRepository, StoreRepository>();
+
+// ── Webhook notifier ──────────────────────────────────────────────────────────
+builder.Services.Configure<WebhookOptions>(builder.Configuration.GetSection("Webhooks"));
+builder.Services.AddHttpClient<IWebhookNotifier, WebhookNotifier>();
 
 // ── Services ──────────────────────────────────────────────────────────────────
 builder.Services.AddScoped<IStockService, StockService>();
@@ -53,6 +61,47 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+
+// ── CORS ──────────────────────────────────────────────────────────────────────
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("LiserePolicy", policy =>
+    {
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        }
+        else
+        {
+            var allowedOrigins = builder.Configuration
+                .GetSection("Cors:AllowedOrigins")
+                .Get<string[]>() ?? [];
+            policy.WithOrigins(allowedOrigins).AllowAnyMethod().AllowAnyHeader();
+        }
+    });
+});
+
+// ── Rate Limiting ─────────────────────────────────────────────────────────────
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("fixed", httpContext =>
+    {
+        var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                  ?? httpContext.User.FindFirst("sub")?.Value;
+        var key = userId ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+
+        return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 100,
+            Window = TimeSpan.FromMinutes(1),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 0,
+        });
+    });
+});
+
 builder.Services.AddControllers();
 if (builder.Environment.IsDevelopment())
 {
@@ -73,7 +122,13 @@ if (app.Environment.IsDevelopment())
 
 // ── Pipeline ──────────────────────────────────────────────────────────────────
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+app.UseCors("LiserePolicy");
+
 app.UseAuthentication();
+
+app.UseRateLimiter();
+
 app.UseAuthorization();
 app.MapControllers();
 

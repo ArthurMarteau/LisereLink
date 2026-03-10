@@ -320,7 +320,7 @@ public class RequestLine
 {
     public Guid Id { get; set; }
     public Guid RequestId { get; set; }
-    public Guid ArticleId { get; set; }
+    public Guid ArticleId { get; set; }  // FK to StockApi article — no navigation property
     public string ColorOrPrint { get; set; }
     public List<Size> RequestedSizes { get; set; }
     public int Quantity { get; set; }
@@ -328,23 +328,27 @@ public class RequestLine
 
     // Navigation
     public Request Request { get; set; }
-    public Article Article { get; set; }
+    // No Article navigation — Article is not an entity in Lisere.API
 }
 ```
 
-**3. Article (synced from Lisere.StockApi, read-only in Lisere.API)**
+**3. Article — DTO only in Lisere.API (no entity, no DB table)**
+
+`Article` is NOT a domain entity in `Lisere.Domain`. It is represented solely as `ArticleDto` in `Lisere.Application.DTOs`.
+Articles are fetched live from `Lisere.StockApi` via `IExternalStockApiClient`. No local storage, no sync, no `DbSet<Article>` in `LisereDbContext`.
+
 ```csharp
-public class Article
+// Lisere.Application.DTOs.ArticleDto
+public class ArticleDto
 {
     public Guid Id { get; set; }
     public string Barcode { get; set; } // EAN-13
-    public ClothingFamily Family { get; set; }
+    public string Family { get; set; }
     public string Name { get; set; }
     public string ColorOrPrint { get; set; }
-    public List<Size> AvailableSizes { get; set; }
-    public decimal? Price { get; set; }      // optional, synced from StockApi
-    public string? ImageUrl { get; set; }    // optional, synced from StockApi
-    public DateTime? LastSyncedAt { get; set; } // set by ArticleSyncService
+    public List<string> AvailableSizes { get; set; }
+    public decimal? Price { get; set; }
+    public string? ImageUrl { get; set; }
 }
 ```
 
@@ -549,12 +553,12 @@ public class Store
 - Alternative proposed → Seller
 - Request cancelled → Stockist
 
-### Article Sync Strategy
+### Article Strategy
 
-- `ArticleSyncService` (BackgroundService in Lisere.API) syncs article catalogue from Lisere.StockApi hourly + on startup
-- Articles stored locally in Lisere DB for fast search and offline display
-- Stock levels are never stored locally — always fetched live from Lisere.StockApi via Redis cache (TTL 30s)
-- If Lisere.StockApi is down → show cached data with warning, block new request creation
+- Articles are fetched **live** from Lisere.StockApi via `IExternalStockApiClient` — no local DB table, no sync service
+- `ArticleService` in Lisere.Application delegates directly to `IExternalStockApiClient`
+- Stock levels fetched live from Lisere.StockApi via Redis cache (TTL 30s)
+- If Lisere.StockApi is down → log warning, return empty result, do NOT propagate exception, block new request creation
 
 ### Mobile First
 

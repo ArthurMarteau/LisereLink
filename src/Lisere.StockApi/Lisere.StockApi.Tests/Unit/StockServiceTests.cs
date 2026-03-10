@@ -1,5 +1,6 @@
 using Lisere.StockApi.Application.DTOs;
 using Lisere.StockApi.Application.Exceptions;
+using Lisere.StockApi.Application.Interfaces;
 using Lisere.StockApi.Application.Services;
 using Lisere.StockApi.Domain.Entities;
 using Lisere.StockApi.Domain.Enums;
@@ -14,6 +15,7 @@ public class StockServiceTests
     private readonly IStockEntryRepository _stockEntryRepo;
     private readonly IStoreRepository _storeRepo;
     private readonly IArticleRepository _articleRepo;
+    private readonly IWebhookNotifier _webhookNotifier;
     private readonly StockService _service;
 
     public StockServiceTests()
@@ -21,7 +23,8 @@ public class StockServiceTests
         _stockEntryRepo = Substitute.For<IStockEntryRepository>();
         _storeRepo = Substitute.For<IStoreRepository>();
         _articleRepo = Substitute.For<IArticleRepository>();
-        _service = new StockService(_stockEntryRepo, _storeRepo, _articleRepo);
+        _webhookNotifier = Substitute.For<IWebhookNotifier>();
+        _service = new StockService(_stockEntryRepo, _storeRepo, _articleRepo, _webhookNotifier);
     }
 
     // ── UpdateStockAsync ─────────────────────────────────────────────────────
@@ -38,8 +41,9 @@ public class StockServiceTests
         };
 
         await Assert.ThrowsAsync<StockException>(() => _service.UpdateStockAsync(dto));
-        
+
         await _stockEntryRepo.DidNotReceive().UpsertAsync(Arg.Any<StockEntry>(), Arg.Any<CancellationToken>());
+        await _webhookNotifier.DidNotReceive().NotifyStockUpdatedAsync(Arg.Any<Guid>(), Arg.Any<string>());
     }
 
     [Fact]
@@ -80,6 +84,8 @@ public class StockServiceTests
                 e.AvailableQuantity == 5 &&
                 e.LastUpdatedAt >= before),
             Arg.Any<CancellationToken>());
+
+        await _webhookNotifier.Received(1).NotifyStockUpdatedAsync(articleId, "paris-2");
     }
 
     // ── GetStockAsync ────────────────────────────────────────────────────────

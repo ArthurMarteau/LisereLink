@@ -60,19 +60,6 @@ namespace Lisere.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Stocks",
-                columns: table => new
-                {
-                    ArticleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Size = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
-                    AvailableQuantity = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Stocks", x => new { x.ArticleId, x.Size });
-                });
-
-            migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
@@ -331,9 +318,6 @@ namespace Lisere.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "RequestLines");
-
-            migrationBuilder.DropTable(
-                name: "Stocks");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

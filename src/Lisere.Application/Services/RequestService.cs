@@ -5,6 +5,7 @@ using Lisere.Application.Interfaces;
 using Lisere.Application.Mapping;
 using Lisere.Domain.Enums;
 using Lisere.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace Lisere.Application.Services;
 
@@ -12,11 +13,19 @@ public class RequestService : IRequestService
 {
     private readonly IRequestRepository _requestRepository;
     private readonly IStockService _stockService;
+    private readonly INotificationService _notificationService;
+    private readonly ILogger<RequestService> _logger;
 
-    public RequestService(IRequestRepository requestRepository, IStockService stockService)
+    public RequestService(
+        IRequestRepository requestRepository,
+        IStockService stockService,
+        INotificationService notificationService,
+        ILogger<RequestService> logger)
     {
         _requestRepository = requestRepository;
         _stockService = stockService;
+        _notificationService = notificationService;
+        _logger = logger;
     }
 
     public async Task<RequestDto> CreateAsync(CreateRequestDto dto, CancellationToken cancellationToken = default)
@@ -44,7 +53,13 @@ public class RequestService : IRequestService
         }
 
         await _requestRepository.AddAsync(request, cancellationToken);
-        return request.ToDto();
+        var requestDto = request.ToDto();
+
+        _ = _notificationService.NotifyNewRequestAsync(requestDto).ContinueWith(
+            t => _logger.LogWarning(t.Exception, "Échec de la notification SignalR (NewRequest)."),
+            TaskContinuationOptions.OnlyOnFaulted);
+
+        return requestDto;
     }
 
     public async Task<PagedResult<RequestDto>> GetAllAsync(
@@ -88,14 +103,26 @@ public class RequestService : IRequestService
         request.ModifiedAt = DateTime.UtcNow;
 
         await _requestRepository.UpdateAsync(request, cancellationToken);
-        return request.ToDto();
+        var requestDto = request.ToDto();
+
+        _ = _notificationService.NotifyRequestUpdatedAsync(requestDto).ContinueWith(
+            t => _logger.LogWarning(t.Exception, "Échec de la notification SignalR (RequestUpdated)."),
+            TaskContinuationOptions.OnlyOnFaulted);
+
+        return requestDto;
     }
 
     public async Task CancelAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        _ = await _requestRepository.GetByIdAsync(id, cancellationToken)
+        var request = await _requestRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new KeyNotFoundException($"Demande {id} introuvable.");
 
+        var sellerId = request.SellerId;
+
         await _requestRepository.DeleteAsync(id, cancellationToken);
+
+        _ = _notificationService.NotifyRequestCancelledAsync(id, sellerId).ContinueWith(
+            t => _logger.LogWarning(t.Exception, "Échec de la notification SignalR (RequestCancelled)."),
+            TaskContinuationOptions.OnlyOnFaulted);
     }
 }

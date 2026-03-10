@@ -1,50 +1,70 @@
-using Lisere.Application.Interfaces;
-using Lisere.Application.Services;
-using Lisere.Domain.Interfaces;
-using Lisere.Infrastructure.ExternalServices;
-using Lisere.Infrastructure.Persistence;
-using Lisere.Infrastructure.Persistence.Repositories;
-using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using System.Threading.RateLimiting;
+using Lisere.Application;
+using Lisere.Infrastructure;
+using Lisere.Infrastructure.Identity;
+using Lisere.Infrastructure.SignalR;
+using Lisere.API.Middlewares;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddApplicationServices();
+builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment);
 
-// Database
-builder.Services.AddDbContext<LisereDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Repositories
-builder.Services.AddScoped<IRequestRepository, RequestRepository>();
-builder.Services.AddScoped<IRequestLineRepository, RequestLineRepository>();
-
-// External API client (typed HttpClient)
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddHttpClient<IExternalStockApiClient, ExternalStockApiClient>(client =>
+// ── CORS ──────────────────────────────────────────────────────────────────────
+builder.Services.AddCors(options =>
 {
-    client.BaseAddress = new Uri(
-        builder.Configuration["ExternalStockApi:BaseUrl"] ?? "https://localhost:5200");
+    options.AddPolicy("LiserePolicy", policy =>
+    {
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        }
+        else
+        {
+            var allowedOrigins = builder.Configuration
+                .GetSection("Cors:AllowedOrigins")
+                .Get<string[]>() ?? [];
+            policy.WithOrigins(allowedOrigins).AllowAnyMethod().AllowAnyHeader();
+        }
+    });
 });
 
-// Redis distributed cache
-builder.Services.AddStackExchangeRedisCache(options =>
+// ── Rate Limiting ─────────────────────────────────────────────────────────────
+builder.Services.AddRateLimiter(options =>
 {
-    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("fixed", httpContext =>
+    {
+        var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                  ?? httpContext.User.FindFirst("sub")?.Value;
+        var key = userId ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+
+        return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 100,
+            Window = TimeSpan.FromMinutes(1),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 0,
+        });
+    });
 });
 
-// Application services
-builder.Services.AddScoped<IArticleService, ArticleService>();
-builder.Services.AddScoped<IRequestService, RequestService>();
-builder.Services.AddScoped<IStockService, StockService>();
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddOpenApi();
+}
 
 var app = builder.Build();
+
+await RoleSeeder.SeedRolesAsync(app.Services);
 
 app.UseDefaultFiles();
 app.MapStaticAssets();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -52,10 +72,23 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+app.UseCors("LiserePolicy");
+
+app.UseAuthentication();
+
+app.UseRateLimiter();
+
 app.UseAuthorization();
 
 app.MapControllers();
 
+app.MapHub<NotificationHub>("/hubs/notifications");
+
 app.MapFallbackToFile("/index.html");
 
 app.Run();
+
+// Nécessaire pour WebApplicationFactory<Program> dans les tests d'intégration
+public partial class Program { }

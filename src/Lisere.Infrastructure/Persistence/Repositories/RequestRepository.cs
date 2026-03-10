@@ -81,4 +81,13 @@ public class RequestRepository : IRequestRepository
             .OrderBy(r => r.CreatedAt)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IEnumerable<Request>> GetExpiredPendingAsync(
+        DateTime threshold,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Requests
+            .Where(r => r.Status == RequestStatus.Pending && r.CreatedAt <= threshold)
+            .ToListAsync(cancellationToken);
+    }
 }
