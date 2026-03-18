@@ -66,6 +66,19 @@ public class ArticleServiceTests
             .SearchArticlesAsync(null, null, 1, 50, Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task SearchAsync_WithPageSizeBelowMax_PreservesOriginalPageSize()
+    {
+        _stockApiClient
+            .SearchArticlesAsync(null, null, 1, 20, Arg.Any<CancellationToken>())
+            .Returns(new PagedResult<ArticleDto> { Items = [], TotalCount = 0, Page = 1, PageSize = 20 });
+
+        await _sut.SearchAsync(null, null, 1, 20);
+
+        await _stockApiClient.Received(1)
+            .SearchArticlesAsync(null, null, 1, 20, Arg.Any<CancellationToken>());
+    }
+
     // -------------------------------------------------------------------------
     // GetByBarcodeAsync
     // -------------------------------------------------------------------------

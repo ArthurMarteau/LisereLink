@@ -51,6 +51,26 @@ public class RequestServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_WithAvailableStock_LinesHaveCorrectRequestId()
+    {
+        var articleId = Guid.NewGuid();
+        var dto = BuildCreateRequestDto(articleId, "M");
+
+        _stockService.IsAvailableAsync(articleId, "M", Arg.Any<CancellationToken>())
+            .Returns(true);
+
+        await _sut.CreateAsync(dto);
+
+        await _repository.Received(1).AddAsync(
+            Arg.Is<Request>(r =>
+                r.Lines.All(l =>
+                    l.RequestId == r.Id &&
+                    l.CreatedAt != default &&
+                    l.CreatedBy == dto.SellerId.ToString())),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task CreateAsync_WithUnavailableStock_ThrowsBusinessException()
     {
         var articleId = Guid.NewGuid();
@@ -95,6 +115,17 @@ public class RequestServiceTests
         await _sut.GetAllAsync(1, 999);
 
         await _repository.Received(1).GetAllAsync(1, 50, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetAllAsync_WithPageSizeBelowMax_PreservesOriginalPageSize()
+    {
+        _repository.GetAllAsync(1, 20, Arg.Any<CancellationToken>())
+            .Returns((Enumerable.Empty<Request>(), 0));
+
+        await _sut.GetAllAsync(1, 20);
+
+        await _repository.Received(1).GetAllAsync(1, 20, Arg.Any<CancellationToken>());
     }
 
     // -------------------------------------------------------------------------
@@ -183,6 +214,62 @@ public class RequestServiceTests
         var result = await _sut.GetByIdAsync(Guid.NewGuid());
 
         Assert.Null(result);
+    }
+
+    // -------------------------------------------------------------------------
+    // Notification fire-and-forget — ne propage pas les exceptions
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task CreateAsync_WhenNotificationFails_DoesNotThrow()
+    {
+        var articleId = Guid.NewGuid();
+        var dto = BuildCreateRequestDto(articleId, "M");
+
+        _stockService.IsAvailableAsync(articleId, "M", Arg.Any<CancellationToken>())
+            .Returns(true);
+        _notificationService
+            .NotifyNewRequestAsync(Arg.Any<RequestDto>())
+            .Returns(Task.FromException(new Exception("SignalR down")));
+
+        var exception = await Record.ExceptionAsync(() => _sut.CreateAsync(dto));
+
+        await Task.Delay(50);
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WhenNotificationFails_DoesNotThrow()
+    {
+        var request = BuildRequest(RequestStatus.Pending);
+        _repository.GetByIdAsync(request.Id, Arg.Any<CancellationToken>())
+            .Returns(request);
+        _notificationService
+            .NotifyRequestUpdatedAsync(Arg.Any<RequestDto>())
+            .Returns(Task.FromException(new Exception("SignalR down")));
+
+        var dto = new UpdateRequestDto { Status = RequestStatus.InProgress };
+
+        var exception = await Record.ExceptionAsync(() => _sut.UpdateAsync(request.Id, dto));
+
+        await Task.Delay(50);
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public async Task CancelAsync_WhenNotificationFails_DoesNotThrow()
+    {
+        var request = BuildRequest(RequestStatus.Pending);
+        _repository.GetByIdAsync(request.Id, Arg.Any<CancellationToken>())
+            .Returns(request);
+        _notificationService
+            .NotifyRequestCancelledAsync(Arg.Any<Guid>(), Arg.Any<Guid>())
+            .Returns(Task.FromException(new Exception("SignalR down")));
+
+        var exception = await Record.ExceptionAsync(() => _sut.CancelAsync(request.Id));
+
+        await Task.Delay(50);
+        Assert.Null(exception);
     }
 
     // -------------------------------------------------------------------------

@@ -69,9 +69,10 @@ public class StockServiceTests
 
         Assert.Equal(3, result);
         await _cache.Received(1).SetAsync(
-            Arg.Any<string>(),
+            Arg.Is<string>(k => k.StartsWith("stock:")),
             Arg.Any<byte[]>(),
-            Arg.Any<DistributedCacheEntryOptions>(),
+            Arg.Is<DistributedCacheEntryOptions>(o =>
+                o.AbsoluteExpirationRelativeToNow == TimeSpan.FromSeconds(30)),
             Arg.Any<CancellationToken>());
     }
 

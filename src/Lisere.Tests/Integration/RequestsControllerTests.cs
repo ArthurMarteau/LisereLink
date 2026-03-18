@@ -1,6 +1,6 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Lisere.Application.Common;
 using Lisere.Application.DTOs;
 using Lisere.Application.Interfaces;
 using Microsoft.AspNetCore.Hosting;
@@ -10,13 +10,26 @@ using Xunit;
 
 namespace Lisere.Tests.Integration;
 
-public class RequestsControllerTests : IClassFixture<LisereWebApplicationFactory>
+public class RequestsControllerTests : IntegrationTestBase
 {
-    private readonly LisereWebApplicationFactory _factory;
+    public RequestsControllerTests(LisereWebApplicationFactory factory) : base(factory) { }
 
-    public RequestsControllerTests(LisereWebApplicationFactory factory)
+    // ── GET /api/requests ────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GetRequests_WithValidToken_Returns200WithEmptyPagedResult()
     {
-        _factory = factory;
+        var client = await AuthenticatedClientAsync();
+
+        var response = await client.GetAsync("/api/requests");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var result = await response.Content.ReadFromJsonAsync<PagedResult<RequestDto>>();
+        Assert.NotNull(result);
+        Assert.Empty(result.Items);
+        Assert.Equal(0, result.TotalCount);
+        Assert.Equal(1, result.Page);
     }
 
     // ── GET /api/requests/{id} ───────────────────────────────────────────────
@@ -34,7 +47,7 @@ public class RequestsControllerTests : IClassFixture<LisereWebApplicationFactory
     [Fact]
     public async Task GetById_WithoutToken_Returns401()
     {
-        var client = _factory.CreateClient();
+        var client = Factory.CreateClient();
 
         var response = await client.GetAsync($"/api/requests/{Guid.NewGuid()}");
 
@@ -104,8 +117,6 @@ public class RequestsControllerTests : IClassFixture<LisereWebApplicationFactory
     public async Task Create_WithAvailableStock_Returns201()
     {
         // Factory spécialisée qui mocke IStockService → stock toujours disponible
-        var factory = new LisereWebApplicationFactory();
-        // On surcharge IStockService via factory inline
         using var customFactory = new StockAvailableFactory();
         var client = await AuthenticatedClientAsync(customFactory);
 
@@ -145,30 +156,6 @@ public class RequestsControllerTests : IClassFixture<LisereWebApplicationFactory
         var response = await client.PutAsJsonAsync($"/api/requests/{Guid.NewGuid()}", dto);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-    }
-
-    // ── Helpers ──────────────────────────────────────────────────────────────
-
-    private async Task<HttpClient> AuthenticatedClientAsync(
-        LisereWebApplicationFactory? factory = null)
-    {
-        var f = factory ?? _factory;
-        var anonClient = f.CreateClient();
-
-        var email = $"req_{Guid.NewGuid():N}@test.com";
-        const string password = "Test123!";
-
-        await anonClient.PostAsJsonAsync("/api/auth/register",
-            new { email, password, firstName = "Test", lastName = "User", role = 0 });
-
-        var loginResp = await anonClient.PostAsJsonAsync("/api/auth/login",
-            new { email, password });
-        var auth = await loginResp.Content.ReadFromJsonAsync<AuthResponseDto>();
-
-        var client = f.CreateClient();
-        client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", auth!.Token);
-        return client;
     }
 }
 

@@ -149,34 +149,106 @@ Lisere.StockApi.API/
 **Type:** Progressive Web App (installable, partial offline support)
 
 **Stack:**
-- React 18 + TypeScript
+- React 19 + TypeScript
 - Vite (build tool)
-- React Router (navigation)
-- Axios (REST API)
+- React Router v6 (navigation — classic mode, no loaders/actions)
+- Axios (REST API — single `apiClient` instance with interceptors)
 - @microsoft/signalr (SignalR client)
 - Zustand (state management) + Zustand persist (offline state)
-- Tailwind CSS (mobile-first styling)
+- Tailwind CSS + shadcn/ui (mobile-first styling + accessible components)
+- `sonner` (toast notifications)
 - @ericblade/quagga2 (EAN-13 barcode scanning)
+- `idb-keyval` (IndexedDB for offline data persistence)
 
 **PWA Features:**
 - Service Worker
 - Manifest.json
 - Web Push Notifications
 
+**Routing & Access Control:**
+- React Router v6 classique
+- `ProtectedRoute` wrapper component — redirects by role (Seller / Stockist / Admin)
+- Unauthenticated → redirect `/login`
+- Wrong role → redirect `/unauthorized`
+
+**Connection Flow:**
+```
+Login (email/password) → Store selection → App
+```
+- Store is selected per session (employees can work across multiple stores)
+- `selectedStoreId` + `selectedStoreName` stored in `useAuthStore`
+- All stock/request queries scoped to `selectedStoreId`
+- Backend must expose `GET /api/stores` (proxy from StockApi)
+
+**Zone Selection:**
+- Zone is NOT a login step — it is a persistent selector in `SellerLayout` and `StockistLayout`
+- `selectedZone` stored in `useAuthStore`, changeable at any time during the session
+- On first app load after store selection: zone selector modal shown if `selectedZone === null`
+- Zone is **mandatory to submit a request** — submit button disabled if no zone selected
+- Zone determines which stockist receives the request (zone-based assignment)
+
+**Layouts (role-based):**
+- `SellerLayout` — bottom nav: Recherche | Demandes | Historique
+- `StockistLayout` — bottom nav: File d'attente | En cours | Historique
+- `AdminLayout` — top bar + sidebar (desktop-optimised)
+- `AuthLayout` — login/store selection screens (no nav)
+
+**Responsive Strategy:**
+- Seller/Stockist: mobile-first (iPhone SE → iPad), bottom navigation
+- Admin: desktop-optimised (sidebar, data tables)
+
+**Zustand Stores:**
+
+| Store | Contenu | Persisté |
+|---|---|---|
+| `useAuthStore` | `token`, `user` (id, firstName, lastName, role, assignedZone), `selectedStoreId`, `selectedStoreName` | ✅ localStorage |
+| `useRequestStore` | demandes en cours, historique | ✅ IndexedDB |
+| `useArticleStore` | résultats de recherche, article sélectionné, dernier état connu (offline) | ✅ IndexedDB |
+| `useSignalRStore` | connexion HubConnection, status (disconnected/connecting/connected/reconnecting) | ❌ |
+| `useNotificationStore` | notifications non lues, compteur badge | ❌ |
+
+**JWT Strategy:**
+- Stored in `localStorage` via `zustand/persist`
+- No refresh token for MVP — JWT lifetime set to 8-12h in `appsettings.json`
+- Single `apiClient` (Axios) with request interceptor → auto-injects `Authorization: Bearer`
+- Response interceptor → 401 triggers logout + redirect `/login`
+- ProblemDetails errors surfaced via `sonner` toasts
+
+**SignalR Lifecycle:**
+- Connection started after store selection (post-login)
+- Connection stopped on logout
+- Automatic reconnect with exponential backoff: `[0, 2000, 5000, 10000]`
+- Connection status displayed in UI (badge)
+
+**Error Handling:**
+- Form validation errors → inline (under field)
+- Business errors (stock unavailable, request not editable...) → `sonner` toast
+- Network / 500 errors → `sonner` toast (generic message)
+- All centralized in Axios response interceptor
+
+**Barcode Scan:**
+- Dedicated full-screen page `/scan` (better camera framing)
+- On success → auto-navigate back to search with article pre-filled
+- Uses `@ericblade/quagga2`
+
 **Offline Strategy:**
-- Current requests cached locally (IndexedDB via Zustand persist)
-- Seller sees their requests with an "offline" badge
-- New requests queued locally, auto-sent on reconnection
-- No offline creation (stock check impossible), but last known state displayed
-- SignalR auto-reconnect with exponential backoff
+- `useAuthStore` → `localStorage` (token survives page refresh)
+- `useRequestStore` + `useArticleStore` → IndexedDB via `idb-keyval` (current requests + last known articles)
+- Seller sees requests with "hors ligne" badge when disconnected
+- No offline request creation (stock check impossible)
+- SignalR auto-reconnect on network restore
+
+**Tests:**
+- Reportés en Phase 5 (Vitest + React Testing Library)
+- E2E Playwright couvre les workflows critiques (Phase 5)
 
 **Main Screens:**
 1. Login
-2. Zone Selection (RTW/FittingRooms/Checkout/Reception/Custom)
-3. Article Search (search bar + barcode scan)
-4. Current Requests List
-5. History
-6. Admin — Stock Management (route `/admin`, Admin role only)
+2. Store Selection
+3. Article Search (search bar + barcode scan button → `/scan`)
+5. Current Requests List
+6. History
+7. Admin — Stock Management (route `/admin`, Admin role only)
 
 ---
 
@@ -324,7 +396,13 @@ public class RequestLine
     public string ColorOrPrint { get; set; }
     public List<Size> RequestedSizes { get; set; }
     public int Quantity { get; set; }
-    public RequestLineStatus Status { get; set; } // Found, NotFound, Pending
+    public RequestLineStatus Status { get; set; } // Pending, Found, NotFound, AlternativeProposed
+
+    // Alternative fields (MVP — Option A: flat fields on RequestLine)
+    public Guid? AlternativeArticleId { get; set; }
+    public string? AlternativeColorOrPrint { get; set; }
+    public List<Size>? AlternativeSizes { get; set; }
+    public bool AlternativeStockOverride { get; set; } // true = stockist forced out-of-stock item
 
     // Navigation
     public Request Request { get; set; }
@@ -405,9 +483,9 @@ public class Store
 
 ### Enums
 
-**RequestStatus:** Pending, InProgress, Delivered, Unavailable, Cancelled
+**RequestStatus:** Pending, InProgress, AwaitingSellerResponse, Delivered, Unavailable, Cancelled
 
-**RequestLineStatus:** Pending, Found, NotFound
+**RequestLineStatus:** Pending, Found, NotFound, AlternativeProposed
 
 **ZoneType:** RTW, FittingRooms, Checkout, Reception, Custom
 
@@ -428,7 +506,7 @@ public class Store
 ### Seller Workflow
 
 1. **Login** → Email/Password (JWT)
-2. **Zone Selection** → RTW / FittingRooms / Checkout / Reception / Custom
+2. **Zone Selection** → via zone selector in layout (mandatory before submitting, changeable anytime)
 3. **Article Search:**
    - Search bar (name, family) — results from local DB (synced from StockApi)
    - Stock availability checked via Lisere.StockApi (Redis TTL 30s) at search time
@@ -451,20 +529,40 @@ public class Store
 ### Stockist Workflow
 
 1. **Login** → Email/Password
-2. **Zone Selection** → RTW / FittingRooms / Checkout / Reception / Custom
+2. **Zone Selection** → via zone selector in layout (mandatory to receive requests, changeable anytime)
 3. **Receive Notification** (push + sound + vibration)
 4. **View request** → Article, color, size(s), seller
 5. **Processing:**
    - Mark "In Progress"
    - Search article in stock
    - Mark "Found" OR "Not Found"
-   - Propose alternative if needed
+   - Propose alternative if needed (see Alternative Flow below)
 6. **Delivery** → Bring to floor
 7. **Visibility:**
    - List all pending requests
    - Day history
 8. **Strict FIFO** (no manual prioritization)
 9. **No stock reservation** — first stockist to find the article wins. Second stockist declares "Not Found"
+
+### Alternative Proposal Flow (Stockist → Seller)
+
+1. Stockist clicks "Proposer une alternative"
+2. **Scan barcode first** (full-screen `/scan`) — primary path
+3. If no barcode label → button "Rechercher manuellement" → article search screen
+4. Select alternative article + size(s)
+5. If size is out-of-stock (greyed out): stockist can **override** with confirmation warning
+   - "Article non en stock — confirmer quand même ?"
+   - Sets `AlternativeStockOverride = true` on RequestLine
+6. Confirm → `RequestLineStatus` → `AlternativeProposed`, `RequestStatus` → `AwaitingSellerResponse`
+7. Seller receives push notification: "Alternative proposée : [Article] · [Coloris] · [Taille(s)]"
+8. Seller views request → sees alternative details
+9. **ACCEPTER** → request updated with alternative article, status → `InProgress`
+10. **REFUSER** → status → `Unavailable`
+
+> ⚠️ Stock override (step 5) is allowed only for alternatives, never for initial requests.
+> 📝 Nice-to-have (post-MVP): auto-update stock when `AlternativeStockOverride = true`
+
+---
 
 ### Admin Workflow
 
@@ -681,11 +779,11 @@ Returns `204 No Content`. Returns `400` if quantity is negative.
 
 | StoreId | Name | Type |
 |---|---|---|
-| paris-opera | Paris Opéra | Physical |
+| paris-2 | Paris 2 | Physical |
+| paris-4 | Paris 4 | Physical |
 | lyon-bellecour | Lyon Bellecour | Physical |
-| online | Online | Online |
 
-20 articles covering all ClothingFamily values, with varied stock per store and size (some at 0 to test unavailability). Online stock is always higher than physical.
+20 articles covering all ClothingFamily values, with varied stock per store and size (some at 0 to test unavailability). Note: Online store (warehouse) is excluded from the app — sellers only work in physical stores.
 
 ### Stock Business Rules
 
@@ -757,5 +855,5 @@ Returns `204 No Content`. Returns `400` if quantity is negative.
 
 ---
 
-**Version:** 3.3
-**Last updated:** February 2026
+**Version:** 3.4
+**Last updated:** March 2026

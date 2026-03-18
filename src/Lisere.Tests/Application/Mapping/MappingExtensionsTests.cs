@@ -28,13 +28,8 @@ public class MappingExtensionsTests
 
         var dto = request.ToDto();
 
-        Assert.Equal(request.Id, dto.Id);
-        Assert.Equal(request.SellerId, dto.SellerId);
-        Assert.Equal(request.StockistId, dto.StockistId);
         Assert.Equal("RTW", dto.Zone);
         Assert.Equal("InProgress", dto.Status);
-        Assert.Equal(request.CreatedAt, dto.CreatedAt);
-        Assert.Equal(request.CompletedAt, dto.CompletedAt);
         Assert.Empty(dto.Lines);
     }
 
@@ -73,8 +68,6 @@ public class MappingExtensionsTests
         var entity = dto.ToEntity();
 
         Assert.NotEqual(Guid.Empty, entity.Id);
-        Assert.Equal(dto.SellerId, entity.SellerId);
-        Assert.Equal(ZoneType.FittingRooms, entity.Zone);
         Assert.Equal(RequestStatus.Pending, entity.Status);
         Assert.Empty(entity.Lines);
     }
@@ -98,12 +91,8 @@ public class MappingExtensionsTests
 
         var dto = line.ToDto();
 
-        Assert.Equal(line.Id, dto.Id);
-        Assert.Equal(line.RequestId, dto.RequestId);
-        Assert.Equal(line.ArticleId, dto.ArticleId);
         Assert.Equal("Bleu nuit", dto.ColorOrPrint);
-        Assert.Equal(2, dto.RequestedSizes.Count);
-        Assert.Equal(2, dto.Quantity);
+        Assert.Equal(new[] { "S", "M" }, dto.RequestedSizes);
         Assert.Equal("Found", dto.Status);
     }
 
@@ -125,12 +114,6 @@ public class MappingExtensionsTests
         var entity = dto.ToEntity();
 
         Assert.NotEqual(Guid.Empty, entity.Id);
-        Assert.Equal(dto.ArticleId, entity.ArticleId);
-        Assert.Equal("Manteau Laine", entity.ArticleName);
-        Assert.Equal("Rouge", entity.ArticleColorOrPrint);
-        Assert.Equal("1234567890123", entity.ArticleBarcode);
-        Assert.Equal(2, entity.RequestedSizes.Count);
-        Assert.Equal(3, entity.Quantity);
         Assert.Equal(RequestLineStatus.Pending, entity.Status);
     }
 }

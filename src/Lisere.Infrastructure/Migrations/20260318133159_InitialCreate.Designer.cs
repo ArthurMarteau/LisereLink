@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lisere.Infrastructure.Migrations
 {
     [DbContext(typeof(LisereDbContext))]
-    [Migration("20260303110821_InitialCreate")]
+    [Migration("20260318133159_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -89,6 +89,19 @@ namespace Lisere.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("AlternativeArticleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AlternativeColorOrPrint")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("AlternativeSizes")
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("AlternativeStockOverride")
+                        .HasColumnType("bit");
+
                     b.Property<string>("ArticleBarcode")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -137,31 +150,14 @@ namespace Lisere.Infrastructure.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("RequestId");
 
                     b.ToTable("RequestLines");
-                });
-
-            modelBuilder.Entity("Lisere.Domain.Entities.Stock", b =>
-                {
-                    b.Property<Guid>("ArticleId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Size")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<int>("AvailableQuantity")
-                        .HasColumnType("int");
-
-                    b.HasKey("ArticleId", "Size");
-
-                    b.ToTable("Stocks");
                 });
 
             modelBuilder.Entity("Lisere.Domain.Entities.User", b =>

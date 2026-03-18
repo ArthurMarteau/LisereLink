@@ -14,7 +14,7 @@ public class RequestLineConfiguration : IEntityTypeConfiguration<RequestLine>
 
         builder.Property(rl => rl.Status)
             .HasConversion<string>()
-            .HasMaxLength(20);
+            .HasMaxLength(30);
 
         builder.Property(rl => rl.ArticleName)
             .IsRequired()
@@ -41,6 +41,24 @@ public class RequestLineConfiguration : IEntityTypeConfiguration<RequestLine>
 
         builder.Property(rl => rl.RequestedSizes)
             .HasConversion(sizesConverter, sizesComparer)
+            .HasColumnType("nvarchar(200)");
+
+        builder.Property(rl => rl.AlternativeColorOrPrint)
+            .HasMaxLength(200);
+
+        var altSizesConverter = new ValueConverter<List<string>?, string?>(
+            v => v == null ? null : string.Join(',', v),
+            v => string.IsNullOrEmpty(v)
+                ? null
+                : v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
+
+        var altSizesComparer = new ValueComparer<List<string>?>(
+            (c1, c2) => c1 == null ? c2 == null : c2 != null && c1.SequenceEqual(c2),
+            c => c == null ? 0 : c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+            c => c == null ? null : c.ToList());
+
+        builder.Property(rl => rl.AlternativeSizes)
+            .HasConversion(altSizesConverter, altSizesComparer)
             .HasColumnType("nvarchar(200)");
 
         builder.Property(rl => rl.CreatedBy)

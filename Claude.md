@@ -15,7 +15,7 @@ PWA for managing clothing requests between sellers and stockists in retail store
 
 ### Lisere.API (main app)
 - **Backend:** .NET 10, EF Core (Code First), SQL Server, SignalR, ASP.NET Identity + JWT, Redis
-- **Frontend:** React 18 + TypeScript, Vite, Zustand, Tailwind CSS, @ericblade/quagga2 (EAN-13), @microsoft/signalr
+- **Frontend:** React 19 + TypeScript, Vite, Zustand, Tailwind CSS, @ericblade/quagga2 (EAN-13), @microsoft/signalr
 - **Architecture:** Clean Architecture (Domain → Application → Infrastructure → API)
 
 ### Lisere.StockApi (autonomous stock service — already implemented)
@@ -43,13 +43,18 @@ src/
 
 frontend/
 └── src/
+    ├── assets/                           # Images, icons, fonts
     ├── components/
+    │   └── ui/                           # Visual-only components (Button, Badge, Modal...)
+    ├── constants/                        # Mirrored enums from backend (RequestStatus, ZoneType...)
+    ├── hooks/                            # Custom hooks (useSignalR, useBarcode, useDebounce...)
+    ├── layouts/                          # Role-based shells (SellerLayout, StockistLayout, AdminLayout, AuthLayout)
     ├── pages/
     │   └── admin/                        # Admin microfrontend (stock management)
+    ├── services/                         # apiClient (Axios) + SignalR client
     ├── stores/                           # Zustand stores
-    ├── services/                         # API + SignalR clients
-    ├── types/
-    └── hooks/
+    ├── types/                            # TypeScript interfaces
+    └── utils/                            # Pure functions (formatDate, formatSize...)
 ```
 
 ---
@@ -97,8 +102,15 @@ npm run test
 - Strict mode, zero `any`
 - Functional components + hooks only
 - Zustand for state management (no Context API for shared state)
-- Axios for REST, @microsoft/signalr for real-time
-- Tailwind CSS only (no inline styles, no CSS modules)
+- Axios for REST (single `apiClient` instance with JWT interceptor), @microsoft/signalr for real-time
+- Tailwind CSS + shadcn/ui (no inline styles, no CSS modules)
+- `sonner` for toast notifications (errors, confirmations)
+- JWT stored in `localStorage` (persisted via `zustand/persist`)
+- Errors: inline for forms, toasts for business/network errors
+- Mobile-first (Seller/Stockist), desktop-optimised (Admin)
+- `useEffect` reserved for true side effects only (SignalR lifecycle, timers with cleanup) — never for data fetching or state sync 
+- Prefer `useActionState` for async mutations (form submissions, request creation) - Prefer derived state (`useMemo`) over syncing two states via `useEffect` 
+- `useEffectEvent` for SignalR event callbacks (avoids stale closure dependencies)
 
 ### General
 - **Code in English, UI/messages in French**
@@ -201,9 +213,23 @@ Both services use ExceptionHandlingMiddleware with ProblemDetails (RFC 7807):
 
 - xUnit for unit + integration tests — both services, 80% coverage minimum
 - WebApplicationFactory for API integration tests
-- NSubstitute for mocking
+- NSubstitute for mocking (never Moq)
 - E2E with Playwright for Lisere.API workflows only
 - Run single test: `dotnet test --filter "FullyQualifiedName~TestClassName.TestMethodName"`
+- Mutation testing: Stryker.NET (`dotnet stryker` from solution root)
+
+### Shared test infrastructure — reuse, never recreate
+- `Lisere.Tests/Integration/IntegrationTestBase.cs` → base class for all integration tests, provides `AuthenticatedClientAsync()` and `RegisterUserAsync()`
+- `Lisere.Tests/Infrastructure/TestHttpHandlers.cs` → `StaticResponseHandler`, `ThrowingHandler`
+- `Lisere.StockApi.Tests/Integration/StockApiIntegrationTestBase.cs` → base class, provides `ClientWithRole()`
+- `Lisere.StockApi.Tests/Unit/StockServiceTestBase.cs` → base class for StockService tests, provides 4 mocks + `Service` instance
+- `Lisere.StockApi.Tests/Unit/TestHttpHandlers.cs` → `CapturingHandler`, `ThrowingHandler`
+
+### Test quality rules
+- Before writing a test, check if an existing test covers the same method + conditions + assertions → if yes, do NOT create it
+- Each test must target a specific behavior — state which behavior or Stryker mutant it kills
+- Use a private static `BuildXxx()` method when multiple tests in the same class need the same entity
+- String mutations on DataAnnotations error messages are always Stryker survivors — do NOT write tests to cover them
 
 ---
 
@@ -219,3 +245,6 @@ Both services use ExceptionHandlingMiddleware with ProblemDetails (RFC 7807):
 - Don't add Create/Update/Delete to ArticlesController in Lisere.API
 - Don't modify stock from Lisere.API — all stock writes go through Lisere.StockApi.API
 - Don't add ASP.NET Identity to Lisere.StockApi — JWT validation only
+- - Don't use `useEffect` for data fetching — call Axios directly in event handlers or Zustand actions 
+- Don't use `useEffect` to sync two pieces of state — derive it with `useMemo` instead
+

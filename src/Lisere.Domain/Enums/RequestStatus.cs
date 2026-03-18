@@ -4,6 +4,7 @@ public enum RequestStatus
 {
     Pending,
     InProgress,
+    AwaitingSellerResponse,
     Delivered,
     Unavailable,
     Cancelled

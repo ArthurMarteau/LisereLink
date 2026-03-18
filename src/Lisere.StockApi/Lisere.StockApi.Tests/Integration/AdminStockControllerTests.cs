@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Lisere.StockApi.Domain.Enums;
 using Lisere.StockApi.Application.DTOs;
@@ -7,19 +6,14 @@ using Xunit;
 
 namespace Lisere.StockApi.Tests.Integration;
 
-public class AdminStockControllerTests : IClassFixture<StockApiWebApplicationFactory>
+public class AdminStockControllerTests : StockApiIntegrationTestBase
 {
-    private readonly StockApiWebApplicationFactory _factory;
-
-    public AdminStockControllerTests(StockApiWebApplicationFactory factory)
-    {
-        _factory = factory;
-    }
+    public AdminStockControllerTests(StockApiWebApplicationFactory factory) : base(factory) { }
 
     [Fact]
     public async Task UpdateStock_WithoutJwt_Returns401()
     {
-        var client = _factory.CreateClient();
+        var client = Factory.CreateClient();
 
         var response = await client.PutAsJsonAsync("/api/admin/stock", ValidDto());
 
@@ -66,19 +60,6 @@ public class AdminStockControllerTests : IClassFixture<StockApiWebApplicationFac
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
-
-    private HttpClient ClientWithRole(string role)
-    {
-        var token = JwtTokenHelper.GenerateToken(
-            role,
-            StockApiWebApplicationFactory.JwtSecret,
-            StockApiWebApplicationFactory.JwtIssuer,
-            StockApiWebApplicationFactory.JwtAudience);
-
-        var client = _factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        return client;
-    }
 
     private static UpdateStockDto ValidDto() => new()
     {

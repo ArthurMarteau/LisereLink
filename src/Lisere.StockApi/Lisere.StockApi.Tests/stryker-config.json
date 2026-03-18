@@ -1,0 +1,28 @@
+{
+  "stryker-config": {
+    "project": "Lisere.StockAPI.Application.csproj",
+    "reporters": ["progress", "html"],
+    "thresholds": {
+      "high": 80,
+      "low": 60,
+      "break": 0
+    },
+    "mutation-level": "Standard",
+    "ignore-mutations": ["String"],
+    "mutate": [
+      "**/*.cs",
+      "!**/Migrations/**",
+      "!**/Program.cs",
+      "!**/DependencyInjection.cs",
+      "!**/*Seeder*.cs",
+      "!**/*Configuration.cs",
+      "!**/WebhookOptions.cs",
+      "!**/StockApiDbContext.cs"
+    ],
+    "ignore-methods": [
+      "LogWarning",
+      "LogInformation",
+      "LogError"
+    ]
+  }
+}

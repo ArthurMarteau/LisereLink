@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Lisere.Application.Common;
 using Lisere.Application.DTOs;
@@ -7,14 +6,9 @@ using Xunit;
 
 namespace Lisere.Tests.Integration;
 
-public class ArticlesControllerTests : IClassFixture<LisereWebApplicationFactory>
+public class ArticlesControllerTests : IntegrationTestBase
 {
-    private readonly LisereWebApplicationFactory _factory;
-
-    public ArticlesControllerTests(LisereWebApplicationFactory factory)
-    {
-        _factory = factory;
-    }
+    public ArticlesControllerTests(LisereWebApplicationFactory factory) : base(factory) { }
 
     // ── GET /api/articles ────────────────────────────────────────────────────
 
@@ -30,12 +24,15 @@ public class ArticlesControllerTests : IClassFixture<LisereWebApplicationFactory
 
         var result = await response.Content.ReadFromJsonAsync<PagedResult<ArticleDto>>();
         Assert.NotNull(result);
+        Assert.Equal(0, result.TotalCount);
+        Assert.Empty(result.Items);
+        Assert.Equal(1, result.Page);
     }
 
     [Fact]
     public async Task Search_WithoutToken_Returns401()
     {
-        var response = await _factory.CreateClient().GetAsync("/api/articles");
+        var response = await Factory.CreateClient().GetAsync("/api/articles");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -56,29 +53,8 @@ public class ArticlesControllerTests : IClassFixture<LisereWebApplicationFactory
     [Fact]
     public async Task GetByBarcode_WithoutToken_Returns401()
     {
-        var response = await _factory.CreateClient().GetAsync("/api/articles/1234567890123");
+        var response = await Factory.CreateClient().GetAsync("/api/articles/1234567890123");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
-
-    // ── Helpers ──────────────────────────────────────────────────────────────
-
-    private async Task<HttpClient> AuthenticatedClientAsync()
-    {
-        var anonClient = _factory.CreateClient();
-        var email = $"art_{Guid.NewGuid():N}@test.com";
-        const string password = "Test123!";
-
-        await anonClient.PostAsJsonAsync("/api/auth/register",
-            new { email, password, firstName = "Test", lastName = "User", role = 0 });
-
-        var loginResp = await anonClient.PostAsJsonAsync("/api/auth/login",
-            new { email, password });
-        var auth = await loginResp.Content.ReadFromJsonAsync<AuthResponseDto>();
-
-        var client = _factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", auth!.Token);
-        return client;
     }
 }
