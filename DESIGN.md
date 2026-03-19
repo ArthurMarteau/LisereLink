@@ -202,8 +202,8 @@ height: 64px;
 | 5 | Détail article + sélection taille | Seller | ✅ Maquetté |
 | 6 | Mes demandes en cours | Seller | ✅ Maquetté |
 | 7 | Traitement d'une demande | Stockist | ✅ Maquetté |
-| 8 | Scan barcode `/scan` | Seller | À faire |
-| 9 | Admin — Gestion stock | Admin | À faire |
+| 8 | Scan barcode `/scan` | Seller | ✅ Maquetté |
+| 9 | Admin — Gestion stock | Admin | ✅ Maquetté |
 
 ---
 
