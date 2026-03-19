@@ -108,9 +108,11 @@ npm run test
 - JWT stored in `localStorage` (persisted via `zustand/persist`)
 - Errors: inline for forms, toasts for business/network errors
 - Mobile-first (Seller/Stockist), desktop-optimised (Admin)
-- `useEffect` reserved for true side effects only (SignalR lifecycle, timers with cleanup) — never for data fetching or state sync 
-- Prefer `useActionState` for async mutations (form submissions, request creation) - Prefer derived state (`useMemo`) over syncing two states via `useEffect` 
+- `useEffect` reserved for true side effects only (SignalR lifecycle, timers with cleanup) — never for data fetching or state sync
+- Prefer `useActionState` for async mutations (form submissions, request creation)
+- Prefer derived state (`useMemo`) over syncing two states via `useEffect`
 - `useEffectEvent` for SignalR event callbacks (avoids stale closure dependencies)
+- All `describe()` and `it()` test descriptions must be in English (code convention)
 
 ### General
 - **Code in English, UI/messages in French**

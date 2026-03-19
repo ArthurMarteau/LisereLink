@@ -72,18 +72,18 @@ describe('signalRClient', () => {
     })
   })
 
-  it('startConnection() démarre la connexion HubConnection', async () => {
+  it('startConnection() starts the HubConnection', async () => {
     await startConnection()
     expect(signalRMocks.mockStart).toHaveBeenCalledOnce()
   })
 
-  it('stopConnection() arrête proprement la connexion', async () => {
+  it('stopConnection() gracefully stops the connection', async () => {
     await startConnection()
     await stopConnection()
     expect(signalRMocks.mockStop).toHaveBeenCalledOnce()
   })
 
-  it('startConnection() appelé deux fois ne crée pas deux connexions', async () => {
+  it('calling startConnection() twice does not create two connections', async () => {
     await startConnection()
     signalRMocks.setConnectionState('Connected')
 
@@ -93,12 +93,12 @@ describe('signalRClient', () => {
     expect(signalRMocks.mockStart).toHaveBeenCalledTimes(1)
   })
 
-  it('reconnexion configurée avec backoff [0, 2000, 5000, 10000]', async () => {
+  it('reconnection is configured with backoff [0, 2000, 5000, 10000]', async () => {
     await startConnection()
     expect(signalRMocks.mockWithAutomaticReconnect).toHaveBeenCalledWith([0, 2000, 5000, 10000])
   })
 
-  it('accessTokenFactory retourne le token du store', async () => {
+  it('accessTokenFactory returns the token from the auth store', async () => {
     await startConnection()
     const options = signalRMocks.mockWithUrl.mock.calls[0][1] as {
       accessTokenFactory: () => string
@@ -106,11 +106,11 @@ describe('signalRClient', () => {
     expect(options.accessTokenFactory()).toBe('mock-token')
   })
 
-  it('stopConnection() sur connexion déjà arrêtée ne lève pas d\'exception', async () => {
+  it('stopConnection() on an already stopped connection does not throw', async () => {
     await expect(stopConnection()).resolves.toBeUndefined()
   })
 
-  it('getConnection() avant startConnection() retourne null', () => {
+  it('getConnection() returns null before startConnection() is called', () => {
     expect(getConnection()).toBeNull()
   })
 })

@@ -54,14 +54,14 @@ describe('apiClient — request interceptor', () => {
     captured.mockLogout.mockReset()
   })
 
-  it('injecte Authorization: Bearer <token> si token présent', () => {
+  it('injects Authorization: Bearer <token> when token is present', () => {
     captured.mockToken = 'test-jwt-token'
     const config = { headers: {} } as InternalAxiosRequestConfig
     const result = captured.requestSuccessFn!(config)
     expect((result.headers as Record<string, string>)['Authorization']).toBe('Bearer test-jwt-token')
   })
 
-  it("n'injecte pas Authorization si pas de token", () => {
+  it('does not inject Authorization header when no token is present', () => {
     captured.mockToken = null
     const config = { headers: {} } as InternalAxiosRequestConfig
     const result = captured.requestSuccessFn!(config)
@@ -80,14 +80,14 @@ describe('apiClient — response interceptor', () => {
     })
   })
 
-  it('appelle logout() et redirige vers /login sur 401', async () => {
+  it('calls logout() and redirects to /login on 401', async () => {
     const error = { response: { status: 401, data: {} } }
     await expect(captured.responseErrorFn!(error)).rejects.toBeDefined()
     expect(captured.mockLogout).toHaveBeenCalledOnce()
     expect(window.location.href).toBe('/login')
   })
 
-  it('rejette avec ProblemDetails parsé sur 400', async () => {
+  it('rejects with parsed ProblemDetails on 400', async () => {
     const problemDetails: ProblemDetails = {
       type: 'https://api.lisere.app/errors/validation',
       title: 'Requête invalide',
@@ -99,20 +99,20 @@ describe('apiClient — response interceptor', () => {
     await expect(captured.responseErrorFn!(error)).rejects.toEqual(problemDetails)
   })
 
-  it('rejette avec message générique français sur 500', async () => {
+  it('rejects with a generic error message on 500', async () => {
     const error = { response: { status: 500, data: {} } }
     await expect(captured.responseErrorFn!(error)).rejects.toMatchObject({
       message: expect.stringContaining('erreur') as unknown,
     })
   })
 
-  it('laisse passer une réponse 200 sans modification', () => {
+  it('passes a 200 response through unmodified', () => {
     const response = { status: 200, data: { id: '1', name: 'Veste' } }
     const result = captured.responseSuccessFn!(response)
     expect(result).toBe(response)
   })
 
-  it('rejette avec ProblemDetails parsé sur 404', async () => {
+  it('rejects with parsed ProblemDetails on 404', async () => {
     const problemDetails: ProblemDetails = {
       type: 'https://api.lisere.app/errors/not-found',
       title: 'Ressource introuvable',
@@ -124,14 +124,14 @@ describe('apiClient — response interceptor', () => {
     await expect(captured.responseErrorFn!(error)).rejects.toEqual(problemDetails)
   })
 
-  it('rejette avec message générique français si le body 400 n\'est pas un ProblemDetails valide', async () => {
+  it('rejects with a generic error message when the 400 body is not a valid ProblemDetails', async () => {
     const error = { response: { status: 400, data: {} } }
     await expect(captured.responseErrorFn!(error)).rejects.toMatchObject({
       message: expect.stringContaining('erreur') as unknown,
     })
   })
 
-  it('appelle logout() et redirige vers /login sur 401 avec payload token expiré', async () => {
+  it('calls logout() and redirects to /login on 401 with an expired token payload', async () => {
     const error = {
       response: {
         status: 401,

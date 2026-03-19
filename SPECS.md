@@ -580,6 +580,7 @@ public class Store
 - **i18n frontend** : internationalisation des labels via `react-i18next`. Actuellement les traductions FR sont hardcodées dans `formatters.ts` — migration triviale si besoin multi-langue (refacto `formatters.ts` uniquement, zéro impact backend).
 - **Stock override auto-update** : mettre à jour le stock automatiquement quand `AlternativeStockOverride = true` sur une `RequestLine` livrée.
 - **NSwag / Swagger codegen** : génération automatique des types TypeScript (`enums.ts`, `types/index.ts`) depuis le Swagger .NET. Élimine la synchronisation manuelle — un `npx nswag run` regénère tous les types depuis le backend. À mettre en place si les enums/DTOs évoluent fréquemment.
+- **Auth via httpOnly cookie** : remplacer le stockage du JWT dans `localStorage` par un cookie `httpOnly` (inaccessible au JavaScript — protégé contre les attaques XSS). Nécessite une configuration backend : `SameSite`, `Secure`, gestion CORS avec `credentials: include`. Priorité haute avant toute mise en production publique. Référence : OWASP Authentication Cheat Sheet.
 - **Temporal API** : migration de `formatDate` (et toute future manipulation de dates) vers l'API native `Temporal` (ES2026, Stage 4 atteint le 11 mars 2026). Actuellement Chrome 144+, Firefox 139+ et Edge 144+ la supportent nativement — Safari encore en preview. Remplace `new Date()` + `Intl.DateTimeFormat` par `Temporal.Instant.from(date).toZonedDateTimeISO('Europe/Paris')`. Polyfill disponible : `@js-temporal/polyfill` pour la compatibilité Safari.
 
 ---
