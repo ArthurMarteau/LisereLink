@@ -1,35 +1,35 @@
-import { useState, use, Suspense } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
-import { ChevronRight } from 'lucide-react'
-import apiClient from '@/services/apiClient'
-import { useAuthStore } from '@/stores/authStore'
-import { UserRole } from '@/constants/enums'
-import type { PagedResult, StoreDto } from '@/types'
+import { useState, use, Suspense } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { ChevronRight } from 'lucide-react';
+import apiClient from '@/services/apiClient';
+import { useAuthStore } from '@/stores/authStore';
+import { UserRole } from '@/constants/enums';
+import type { PagedResult, StoreDto } from '@/types';
 
 // ── Inner component: uses() suspends until stores are ready ─────────────────
 
 interface StoreListProps {
-  promise: Promise<StoreDto[]>
-  selectedId: string | null
-  onSelect: (store: StoreDto) => void
+  promise: Promise<StoreDto[]>;
+  selectedId: string | null;
+  onSelect: (store: StoreDto) => void;
 }
 
 function StoreList({ promise, selectedId, onSelect }: StoreListProps) {
-  const stores = use(promise)
+  const stores = use(promise);
 
   if (stores.length === 0) {
     return (
       <p className="font-[Oswald] text-[11px] tracking-[2px] uppercase text-[#969696] py-4 text-center">
         Aucun magasin disponible
       </p>
-    )
+    );
   }
 
   return (
     <ul className="space-y-[10px]">
       {stores.map((store) => {
-        const isSelected = store.id === selectedId
+        const isSelected = store.id === selectedId;
         return (
           <li key={store.id}>
             <button
@@ -38,7 +38,7 @@ function StoreList({ promise, selectedId, onSelect }: StoreListProps) {
               className={[
                 'w-full flex items-center justify-between bg-white px-4 py-4 text-left transition-colors min-h-[56px]',
                 'border',
-                isSelected ? 'border-[#121212]' : 'border-transparent',
+                isSelected ? 'border-[#121212]' : 'border-[#e1e1e1]',
               ].join(' ')}
             >
               <span className="font-['Libre_Baskerville'] text-[15px] text-[#121212]">
@@ -50,10 +50,10 @@ function StoreList({ promise, selectedId, onSelect }: StoreListProps) {
               />
             </button>
           </li>
-        )
+        );
       })}
     </ul>
-  )
+  );
 }
 
 // ── Skeleton shown while stores load ────────────────────────────────────────
@@ -65,33 +65,33 @@ function StoreSkeleton() {
         <li key={n} className="h-[56px] bg-white animate-pulse" />
       ))}
     </ul>
-  )
+  );
 }
 
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default function StoreSelectionPage() {
-  const navigate = useNavigate()
-  const user = useAuthStore((s) => s.user)
+  const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
 
   const [storesPromise] = useState<Promise<StoreDto[]>>(() =>
     apiClient
       .get<PagedResult<StoreDto>>('/stores')
       .then((r) => r.data.items)
-      .catch((_err: unknown) => {
-        toast.error('Impossible de charger la liste des magasins.')
-        return [] as StoreDto[]
-      }),
-  )
+      .catch(() => {
+        toast.error('Impossible de charger la liste des magasins.');
+        return [] as StoreDto[];
+      })
+  );
 
-  const [selectedStore, setSelectedStore] = useState<StoreDto | null>(null)
+  const [selectedStore, setSelectedStore] = useState<StoreDto | null>(null);
 
   function handleConfirm() {
-    if (!selectedStore) return
-    useAuthStore.getState().setStore(selectedStore.id, selectedStore.name)
-    if (user?.role === UserRole.Seller) navigate('/search')
-    else if (user?.role === UserRole.Stockist) navigate('/queue')
-    else navigate('/admin')
+    if (!selectedStore) return;
+    useAuthStore.getState().setStore(selectedStore.id, selectedStore.name);
+    if (user?.role === UserRole.Seller) navigate('/search');
+    else if (user?.role === UserRole.Stockist) navigate('/queue');
+    else navigate('/admin');
   }
 
   return (
@@ -101,9 +101,7 @@ export default function StoreSelectionPage() {
         <p className="font-[Oswald] text-[11px] tracking-[2px] uppercase text-[#969696] mb-1">
           Bonjour
         </p>
-        <h1 className="font-['Libre_Baskerville'] text-white text-2xl">
-          {user?.firstName}
-        </h1>
+        <h1 className="font-['Libre_Baskerville'] text-white text-2xl">{user?.firstName}</h1>
       </header>
 
       {/* Content */}
@@ -133,5 +131,5 @@ export default function StoreSelectionPage() {
         </button>
       </div>
     </div>
-  )
+  );
 }

@@ -1,49 +1,49 @@
-import { useActionState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
-import apiClient from '@/services/apiClient'
-import { useAuthStore } from '@/stores/authStore'
-import type { ProblemDetails, UserDto } from '@/types'
+import { useActionState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import apiClient from '@/services/apiClient';
+import { useAuthStore } from '@/stores/authStore';
+import type { ProblemDetails, UserDto } from '@/types';
 
 interface LoginResponse {
-  token: string
-  user: UserDto
+  token: string;
+  user: UserDto;
 }
 
 type LoginErrors = {
-  email?: string
-  password?: string
-}
+  email?: string;
+  password?: string;
+};
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const [errors, formAction, isPending] = useActionState<LoginErrors, FormData>(
     async (_prev, formData) => {
-      const emailEntry = formData.get('email')
-      const passwordEntry = formData.get('password')
-      const email = typeof emailEntry === 'string' ? emailEntry.trim() : ''
-      const password = typeof passwordEntry === 'string' ? passwordEntry : ''
+      const emailEntry = formData.get('email');
+      const passwordEntry = formData.get('password');
+      const email = typeof emailEntry === 'string' ? emailEntry.trim() : '';
+      const password = typeof passwordEntry === 'string' ? passwordEntry : '';
 
       // Client-side validation
-      const fieldErrors: LoginErrors = {}
-      if (!email) fieldErrors.email = 'L\'adresse e-mail est requise.'
-      else if (!EMAIL_REGEX.test(email)) fieldErrors.email = 'Format d\'e-mail invalide.'
-      if (!password) fieldErrors.password = 'Le mot de passe est requis.'
+      const fieldErrors: LoginErrors = {};
+      if (!email) fieldErrors.email = "L'adresse e-mail est requise.";
+      else if (!EMAIL_REGEX.test(email)) fieldErrors.email = "Format d'e-mail invalide.";
+      if (!password) fieldErrors.password = 'Le mot de passe est requis.';
 
-      if (Object.keys(fieldErrors).length > 0) return fieldErrors
+      if (Object.keys(fieldErrors).length > 0) return fieldErrors;
 
       try {
         const { data } = await apiClient.post<LoginResponse>('/auth/login', {
           email,
           password,
-        })
-        useAuthStore.getState().setToken(data.token)
-        useAuthStore.getState().setUser(data.user)
-        navigate('/store-selection')
-        return {}
+        });
+        useAuthStore.getState().setToken(data.token);
+        useAuthStore.getState().setUser(data.user);
+        navigate('/store-selection');
+        return {};
       } catch (err: unknown) {
         if (
           err !== null &&
@@ -51,15 +51,15 @@ export default function LoginPage() {
           'detail' in err &&
           typeof (err as ProblemDetails).detail === 'string'
         ) {
-          toast.error((err as ProblemDetails).detail)
+          toast.error((err as ProblemDetails).detail);
         } else {
-          toast.error('Une erreur est survenue. Veuillez réessayer.')
+          toast.error('Une erreur est survenue. Veuillez réessayer.');
         }
-        return {}
+        return {};
       }
     },
-    {},
-  )
+    {}
+  );
 
   return (
     <div className="min-h-screen bg-[#121212] flex flex-col">
@@ -131,5 +131,5 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
-  )
+  );
 }

@@ -1,25 +1,25 @@
-import { useState } from 'react'
-import { ZoneType } from '@/constants/enums'
-import { formatZone } from '@/utils/formatters'
-import { useAuthStore } from '@/stores/authStore'
+import { useState } from 'react';
+import { ZoneType } from '@/constants/enums';
+import { formatZone } from '@/utils/formatters';
+import { useAuthStore } from '@/stores/authStore';
 
 interface ZoneSelectorModalProps {
   /** Called after the zone is saved — the only way to close the modal */
-  onClose: () => void
+  onClose: () => void;
   /** Pre-select the current zone when re-opening from the header */
-  initialZone?: ZoneType | null
+  initialZone?: ZoneType | null;
 }
 
-const ALL_ZONES = Object.values(ZoneType)
+const ALL_ZONES = Object.values(ZoneType);
 
 export default function ZoneSelectorModal({ onClose, initialZone }: ZoneSelectorModalProps) {
-  const [selected, setSelected] = useState<ZoneType | null>(initialZone ?? null)
-  const setZone = useAuthStore((s) => s.setZone)
+  const [selected, setSelected] = useState<ZoneType | null>(initialZone ?? null);
+  const setZone = useAuthStore((s) => s.setZone);
 
   function handleConfirm() {
-    if (!selected) return
-    setZone(selected)
-    onClose()
+    if (!selected) return;
+    setZone(selected);
+    onClose();
   }
 
   return (
@@ -38,7 +38,7 @@ export default function ZoneSelectorModal({ onClose, initialZone }: ZoneSelector
 
         <ul className="space-y-2 mb-8">
           {ALL_ZONES.map((zone) => {
-            const isSelected = selected === zone
+            const isSelected = selected === zone;
             return (
               <li key={zone}>
                 <button
@@ -52,17 +52,9 @@ export default function ZoneSelectorModal({ onClose, initialZone }: ZoneSelector
                       : 'border-[#e1e1e1] bg-white text-[#121212]',
                   ].join(' ')}
                 >
-                  <span className="font-['Libre_Baskerville'] text-[15px]">
-                    {formatZone(zone)}
-                  </span>
+                  <span className="font-['Libre_Baskerville'] text-[15px]">{formatZone(zone)}</span>
                   {isSelected && (
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      aria-hidden="true"
-                    >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                       <path
                         d="M2.5 8L6.5 12L13.5 4"
                         stroke="currentColor"
@@ -74,7 +66,7 @@ export default function ZoneSelectorModal({ onClose, initialZone }: ZoneSelector
                   )}
                 </button>
               </li>
-            )
+            );
           })}
         </ul>
 
@@ -88,5 +80,5 @@ export default function ZoneSelectorModal({ onClose, initialZone }: ZoneSelector
         </button>
       </div>
     </div>
-  )
+  );
 }

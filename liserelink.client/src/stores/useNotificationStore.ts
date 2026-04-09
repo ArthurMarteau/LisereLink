@@ -1,12 +1,12 @@
-import { create } from 'zustand'
-import type { Notification as AppNotification } from '@/types'
+import { create } from 'zustand';
+import type { Notification as AppNotification } from '@/types';
 
 interface NotificationState {
-  notifications: AppNotification[]
-  unreadCount: number
-  addNotification: (notification: AppNotification) => void
-  markAllRead: () => void
-  clearNotifications: () => void
+  notifications: AppNotification[];
+  unreadCount: number;
+  addNotification: (notification: AppNotification) => void;
+  markAllRead: () => void;
+  clearNotifications: () => void;
 }
 
 export const useNotificationStore = create<NotificationState>()((set) => ({
@@ -19,4 +19,4 @@ export const useNotificationStore = create<NotificationState>()((set) => ({
     })),
   markAllRead: () => set({ unreadCount: 0 }),
   clearNotifications: () => set({ notifications: [], unreadCount: 0 }),
-}))
+}));

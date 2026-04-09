@@ -1,4 +1,11 @@
-import type { ClothingFamily, RequestLineStatus, RequestStatus, Size, UserRole, ZoneType } from '../constants/enums';
+import type {
+  ClothingFamily,
+  RequestLineStatus,
+  RequestStatus,
+  Size,
+  UserRole,
+  ZoneType,
+} from '../constants/enums';
 
 export interface ArticleDto {
   id: string;

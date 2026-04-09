@@ -8,8 +8,12 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "preview:https": "vite preview --https",
     "test": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@ericblade/quagga2": "^1.12.1",
@@ -45,6 +49,8 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.0",
+    "prettier": "^3.5.3",
+    "eslint-config-prettier": "^10.1.5"
   }
 }

@@ -1,4 +1,10 @@
-import { ClothingFamily, RequestLineStatus, RequestStatus, Size, ZoneType } from '../constants/enums';
+import {
+  ClothingFamily,
+  RequestLineStatus,
+  RequestStatus,
+  Size,
+  ZoneType,
+} from '../constants/enums';
 
 export function formatDate(date: string): string {
   return new Intl.DateTimeFormat('fr-FR', {

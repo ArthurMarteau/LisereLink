@@ -1,5 +1,5 @@
-import { Toaster } from 'sonner'
-import AppRouter from './router'
+import { Toaster } from 'sonner';
+import AppRouter from './router';
 
 export default function App() {
   return (
@@ -7,5 +7,5 @@ export default function App() {
       <AppRouter />
       <Toaster position="top-center" richColors />
     </>
-  )
+  );
 }
