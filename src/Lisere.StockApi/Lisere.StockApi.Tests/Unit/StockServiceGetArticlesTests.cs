@@ -1,31 +1,12 @@
-using Lisere.StockApi.Application.DTOs;
-using Lisere.StockApi.Application.Interfaces;
-using Lisere.StockApi.Application.Services;
 using Lisere.StockApi.Domain.Entities;
 using Lisere.StockApi.Domain.Enums;
-using Lisere.StockApi.Domain.Interfaces;
 using NSubstitute;
 using Xunit;
 
 namespace Lisere.StockApi.Tests.Unit;
 
-public class StockServiceGetArticlesTests
+public class StockServiceGetArticlesTests : StockServiceTestBase
 {
-    private readonly IStockEntryRepository _stockEntryRepo;
-    private readonly IStoreRepository _storeRepo;
-    private readonly IArticleRepository _articleRepo;
-    private readonly IWebhookNotifier _webhookNotifier;
-    private readonly StockService _service;
-
-    public StockServiceGetArticlesTests()
-    {
-        _stockEntryRepo = Substitute.For<IStockEntryRepository>();
-        _storeRepo = Substitute.For<IStoreRepository>();
-        _articleRepo = Substitute.For<IArticleRepository>();
-        _webhookNotifier = Substitute.For<IWebhookNotifier>();
-        _service = new StockService(_stockEntryRepo, _storeRepo, _articleRepo, _webhookNotifier);
-    }
-
     // ── GetArticlesAsync ─────────────────────────────────────────────────────
 
     [Fact]
@@ -37,10 +18,10 @@ public class StockServiceGetArticlesTests
             BuildArticle("1234567890002"),
         };
 
-        _articleRepo.GetAllAsync(1, 20, Arg.Any<CancellationToken>())
+        ArticleRepo.GetAllAsync(1, 20, Arg.Any<CancellationToken>())
             .Returns((articles.AsEnumerable(), 2));
 
-        var result = await _service.GetArticlesAsync(1, 20);
+        var result = await Service.GetArticlesAsync(1, 20);
 
         Assert.Equal(2, result.TotalCount);
         Assert.Equal(2, result.Items.Count());
@@ -51,33 +32,33 @@ public class StockServiceGetArticlesTests
     [Fact]
     public async Task GetArticlesAsync_CapsPageSizeAt50()
     {
-        _articleRepo.GetAllAsync(1, 50, Arg.Any<CancellationToken>())
+        ArticleRepo.GetAllAsync(1, 50, Arg.Any<CancellationToken>())
             .Returns((Enumerable.Empty<Article>(), 0));
 
-        await _service.GetArticlesAsync(1, 999);
+        await Service.GetArticlesAsync(1, 999);
 
-        await _articleRepo.Received(1).GetAllAsync(1, 50, Arg.Any<CancellationToken>());
+        await ArticleRepo.Received(1).GetAllAsync(1, 50, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetArticlesAsync_ClampPageToMinimumOfOne()
     {
-        _articleRepo.GetAllAsync(1, 20, Arg.Any<CancellationToken>())
+        ArticleRepo.GetAllAsync(1, 20, Arg.Any<CancellationToken>())
             .Returns((Enumerable.Empty<Article>(), 0));
 
-        await _service.GetArticlesAsync(0, 20);
+        await Service.GetArticlesAsync(0, 20);
 
-        await _articleRepo.Received(1).GetAllAsync(1, 20, Arg.Any<CancellationToken>());
+        await ArticleRepo.Received(1).GetAllAsync(1, 20, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetArticlesAsync_MapsArticleFieldsCorrectly()
     {
         var article = BuildArticle("9999999999999");
-        _articleRepo.GetAllAsync(1, 10, Arg.Any<CancellationToken>())
+        ArticleRepo.GetAllAsync(1, 10, Arg.Any<CancellationToken>())
             .Returns((new[] { article }.AsEnumerable(), 1));
 
-        var result = await _service.GetArticlesAsync(1, 10);
+        var result = await Service.GetArticlesAsync(1, 10);
         var dto = result.Items.Single();
 
         Assert.Equal(article.Id, dto.Id);
@@ -85,7 +66,7 @@ public class StockServiceGetArticlesTests
         Assert.Equal(article.Name, dto.Name);
         Assert.Equal(article.Family.ToString(), dto.Family);
         Assert.Equal(article.ColorOrPrint, dto.ColorOrPrint);
-        Assert.NotEmpty(dto.AvailableSizes);
+        Assert.Equal(new[] { "S", "M" }, dto.AvailableSizes);
     }
 
     // ── GetArticleByBarcodeAsync ─────────────────────────────────────────────
@@ -94,10 +75,10 @@ public class StockServiceGetArticlesTests
     public async Task GetArticleByBarcodeAsync_WhenFound_ReturnsMappedDto()
     {
         var article = BuildArticle("3400936123450");
-        _articleRepo.GetByBarcodeAsync("3400936123450", Arg.Any<CancellationToken>())
+        ArticleRepo.GetByBarcodeAsync("3400936123450", Arg.Any<CancellationToken>())
             .Returns(article);
 
-        var result = await _service.GetArticleByBarcodeAsync("3400936123450");
+        var result = await Service.GetArticleByBarcodeAsync("3400936123450");
 
         Assert.NotNull(result);
         Assert.Equal("3400936123450", result.Barcode);
@@ -105,12 +86,31 @@ public class StockServiceGetArticlesTests
     }
 
     [Fact]
+    public async Task GetArticleByBarcodeAsync_WhenFound_MapsAllFieldsCorrectly()
+    {
+        // Tue le mutant return null (ligne 91) — vérifie le mapping complet, pas seulement NotNull
+        var article = BuildArticle("3400936123450");
+        ArticleRepo.GetByBarcodeAsync("3400936123450", Arg.Any<CancellationToken>())
+            .Returns(article);
+
+        var result = await Service.GetArticleByBarcodeAsync("3400936123450");
+
+        Assert.NotNull(result);
+        Assert.Equal(article.Id, result.Id);
+        Assert.Equal("3400936123450", result.Barcode);
+        Assert.Equal(article.Name, result.Name);
+        Assert.Equal(article.Family.ToString(), result.Family);
+        Assert.Equal(article.ColorOrPrint, result.ColorOrPrint);
+        Assert.Equal(new[] { "S", "M" }, result.AvailableSizes);
+    }
+
+    [Fact]
     public async Task GetArticleByBarcodeAsync_WhenNotFound_ReturnsNull()
     {
-        _articleRepo.GetByBarcodeAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+        ArticleRepo.GetByBarcodeAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((Article?)null);
 
-        var result = await _service.GetArticleByBarcodeAsync("0000000000000");
+        var result = await Service.GetArticleByBarcodeAsync("0000000000000");
 
         Assert.Null(result);
     }
@@ -121,7 +121,7 @@ public class StockServiceGetArticlesTests
     public async Task GetAllArticlesWithStockAsync_GroupsEntriesByArticle()
     {
         var articleId = Guid.NewGuid();
-        const string storeId = "paris-opera";
+        const string storeId = "002";
 
         var entries = new List<StockEntry>
         {
@@ -129,13 +129,13 @@ public class StockServiceGetArticlesTests
             new() { Id = Guid.NewGuid(), ArticleId = articleId, StoreId = storeId, Size = Size.M, AvailableQuantity = 3, StoreType = StoreType.Physical, LastUpdatedAt = DateTime.UtcNow },
         };
 
-        _stockEntryRepo.GetByStoreAsync(storeId, 1, 20, Arg.Any<CancellationToken>())
+        StockEntryRepo.GetByStoreAsync(storeId, 1, 20, Arg.Any<CancellationToken>())
             .Returns((entries.AsEnumerable(), 2));
 
-        _articleRepo.GetByIdsAsync(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
+        ArticleRepo.GetByIdsAsync(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(new List<Article> { BuildArticle("1234567890123", articleId) });
 
-        var result = await _service.GetAllArticlesWithStockAsync(storeId, 1, 20);
+        var result = await Service.GetAllArticlesWithStockAsync(storeId, 1, 20);
 
         var group = result.Items.Single();
         Assert.Equal(articleId, group.ArticleId);
@@ -145,15 +145,15 @@ public class StockServiceGetArticlesTests
     [Fact]
     public async Task GetAllArticlesWithStockAsync_CapsPageSizeAt50()
     {
-        _stockEntryRepo.GetByStoreAsync(Arg.Any<string>(), 1, 50, Arg.Any<CancellationToken>())
+        StockEntryRepo.GetByStoreAsync(Arg.Any<string>(), 1, 50, Arg.Any<CancellationToken>())
             .Returns((Enumerable.Empty<StockEntry>(), 0));
 
-        _articleRepo.GetByIdsAsync(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
+        ArticleRepo.GetByIdsAsync(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(Enumerable.Empty<Article>());
 
-        await _service.GetAllArticlesWithStockAsync("any-store", 1, 999);
+        await Service.GetAllArticlesWithStockAsync("any-store", 1, 999);
 
-        await _stockEntryRepo.Received(1).GetByStoreAsync("any-store", 1, 50, Arg.Any<CancellationToken>());
+        await StockEntryRepo.Received(1).GetByStoreAsync("any-store", 1, 50, Arg.Any<CancellationToken>());
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

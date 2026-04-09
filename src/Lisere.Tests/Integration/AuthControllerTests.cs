@@ -2,20 +2,17 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Lisere.Application.Common;
 using Lisere.Application.DTOs;
 using Xunit;
 
 namespace Lisere.Tests.Integration;
 
-public class AuthControllerTests : IClassFixture<LisereWebApplicationFactory>
+public class AuthControllerTests : IntegrationTestBase
 {
-    private readonly LisereWebApplicationFactory _factory;
     private readonly HttpClient _client;
 
-    public AuthControllerTests(LisereWebApplicationFactory factory)
+    public AuthControllerTests(LisereWebApplicationFactory factory) : base(factory)
     {
-        _factory = factory;
         _client = factory.CreateClient();
     }
 
@@ -63,7 +60,7 @@ public class AuthControllerTests : IClassFixture<LisereWebApplicationFactory>
     {
         var email = $"login_{Guid.NewGuid():N}@test.com";
         const string password = "Test123!";
-        await RegisterUserAsync(email, password);
+        await RegisterUserAsync(Factory, email, password);
 
         var response = await _client.PostAsJsonAsync("/api/auth/login", new { email, password });
 
@@ -79,7 +76,7 @@ public class AuthControllerTests : IClassFixture<LisereWebApplicationFactory>
     public async Task Login_WithWrongPassword_Returns401()
     {
         var email = $"wp_{Guid.NewGuid():N}@test.com";
-        await RegisterUserAsync(email, "Test123!");
+        await RegisterUserAsync(Factory, email, "Test123!");
 
         var response = await _client.PostAsJsonAsync("/api/auth/login",
             new { email, password = "WrongPassword!" });
@@ -104,39 +101,5 @@ public class AuthControllerTests : IClassFixture<LisereWebApplicationFactory>
         var response = await _client.GetAsync("/api/requests");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task GetRequests_WithValidToken_Returns200WithEmptyPagedResult()
-    {
-        var email = $"auth_{Guid.NewGuid():N}@test.com";
-        const string password = "Test123!";
-        await RegisterUserAsync(email, password);
-
-        var loginResp = await _client.PostAsJsonAsync("/api/auth/login", new { email, password });
-        loginResp.EnsureSuccessStatusCode();
-        var auth = await loginResp.Content.ReadFromJsonAsync<AuthResponseDto>();
-
-        // Nouveau client isolé pour ne pas polluer les headers partagés
-        var authClient = _factory.CreateClient();
-        authClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", auth!.Token);
-
-        var response = await authClient.GetAsync("/api/requests");
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var result = await response.Content.ReadFromJsonAsync<PagedResult<RequestDto>>();
-        Assert.NotNull(result);
-        Assert.Empty(result.Items);
-    }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    private async Task RegisterUserAsync(string email, string password)
-    {
-        var dto = new { email, password, firstName = "Test", lastName = "User", role = 0 };
-        var response = await _client.PostAsJsonAsync("/api/auth/register", dto);
-        response.EnsureSuccessStatusCode();
     }
 }

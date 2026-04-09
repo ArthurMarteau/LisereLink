@@ -21,7 +21,7 @@ public class StockApiWebApplicationFactory : WebApplicationFactory<Program>, IAs
     // ── Identifiants déterministes pour les tests ────────────────────────────
     public static readonly Guid TestArticleId = new("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
     public const string TestBarcode = "3400936123450";
-    public const string TestStoreId = "paris-opera";
+    public const string TestStoreId = "002";
 
     // ── JWT ──────────────────────────────────────────────────────────────────
     public const string JwtSecret = "test-secret-key-must-be-at-least-32-chars-long!!";
@@ -97,7 +97,7 @@ public class StockApiWebApplicationFactory : WebApplicationFactory<Program>, IAs
         {
             Id = Guid.NewGuid(),
             Code = TestStoreId,
-            Name = "Paris Opéra",
+            Name = "Paris 2",
             Type = StoreType.Physical
         };
         await db.Stores.AddAsync(store);

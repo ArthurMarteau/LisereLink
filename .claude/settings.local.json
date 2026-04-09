@@ -9,7 +9,13 @@
       "Bash(dotnet test:*)",
       "Bash(dotnet ef:*)",
       "Bash(python3 -c \"\nimport xml.etree.ElementTree as ET\ntree = ET.parse\\('C:/Users/Jasha/source/repos/LisereLink/src/Lisere.Tests/TestResults/855de137-89f4-422a-8655-e8d0b74fe81d/coverage.cobertura.xml'\\)\nroot = tree.getroot\\(\\)\nfor pkg in root.findall\\('.//package'\\):\n    name = pkg.get\\('name'\\)\n    rate = float\\(pkg.get\\('line-rate', 0\\)\\)\n    print\\(f'{rate*100:5.1f}%  {name}'\\)\n\")",
-      "Bash(grep -E '<class name' \"C:/Users/Jasha/source/repos/LisereLink/src/Lisere.Tests/TestResults/855de137-89f4-422a-8655-e8d0b74fe81d/coverage.cobertura.xml\" | awk -F'\"' '{\n    for\\(i=1;i<=NF;i++\\) if\\($i~/line-rate/\\) { rate=$\\(i+1\\); printf \"%.0f%%  %s\\\\n\", rate*100, $2; break }\n}' | sort -t'%' -k1 -n | head -30)"
+      "Bash(grep -E '<class name' \"C:/Users/Jasha/source/repos/LisereLink/src/Lisere.Tests/TestResults/855de137-89f4-422a-8655-e8d0b74fe81d/coverage.cobertura.xml\" | awk -F'\"' '{\n    for\\(i=1;i<=NF;i++\\) if\\($i~/line-rate/\\) { rate=$\\(i+1\\); printf \"%.0f%%  %s\\\\n\", rate*100, $2; break }\n}' | sort -t'%' -k1 -n | head -30)",
+      "Bash(cd:*)",
+      "Bash(npm install:*)",
+      "Bash(mkdir -p components/ui constants hooks layouts pages/admin services stores types utils)",
+      "Bash(touch components/ui/.gitkeep constants/.gitkeep hooks/.gitkeep layouts/.gitkeep pages/admin/.gitkeep services/.gitkeep stores/.gitkeep types/.gitkeep utils/.gitkeep)",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

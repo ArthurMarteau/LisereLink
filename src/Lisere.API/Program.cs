@@ -62,11 +62,9 @@ var app = builder.Build();
 
 await RoleSeeder.SeedRolesAsync(app.Services);
 
-app.UseDefaultFiles();
-app.MapStaticAssets();
-
 if (app.Environment.IsDevelopment())
 {
+    await UserSeeder.SeedUsersAsync(app.Services);
     app.MapOpenApi();
 }
 
@@ -84,9 +82,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapHub<NotificationHub>("/hubs/notifications");
-
-app.MapFallbackToFile("/index.html");
+app.MapHub<NotificationHub>("/hubs/requests");
 
 app.Run();
 

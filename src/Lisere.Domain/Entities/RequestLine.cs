@@ -20,6 +20,12 @@ public class RequestLine : BaseEntity
 
     public RequestLineStatus Status { get; set; }
 
+    // Alternative proposal fields
+    public Guid? AlternativeArticleId { get; set; }
+    public string? AlternativeColorOrPrint { get; set; }
+    public List<string>? AlternativeSizes { get; set; }
+    public bool AlternativeStockOverride { get; set; }
+
     // Navigation properties
     public Request Request { get; set; } = null!;
 }

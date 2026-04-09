@@ -86,6 +86,19 @@ namespace Lisere.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("AlternativeArticleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AlternativeColorOrPrint")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("AlternativeSizes")
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("AlternativeStockOverride")
+                        .HasColumnType("bit");
+
                     b.Property<string>("ArticleBarcode")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -134,8 +147,8 @@ namespace Lisere.Infrastructure.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.HasKey("Id");
 
