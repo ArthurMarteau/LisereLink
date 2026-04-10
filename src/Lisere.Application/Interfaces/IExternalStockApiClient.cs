@@ -5,7 +5,9 @@ namespace Lisere.Application.Interfaces;
 
 public interface IExternalStockApiClient
 {
-    Task<IEnumerable<StockDto>> GetStockAsync(Guid articleId, Guid storeId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<StoreDto>> GetStoresAsync(CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<StockDto>> GetStockAsync(Guid articleId, string storeId, CancellationToken cancellationToken = default);
 
     Task<PagedResult<ArticleDto>> SearchArticlesAsync(
         string? query,

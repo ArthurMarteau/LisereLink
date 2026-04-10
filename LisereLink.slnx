@@ -1,13 +1,11 @@
 <Solution>
-  <Project Path="liserelink.client/liserelink.client.esproj">
-    <Build />
-    <Deploy />
-  </Project>
+
   <Project Path="src/Lisere.Domain/Lisere.Domain.csproj" />
   <Project Path="src/Lisere.Application/Lisere.Application.csproj" />
   <Project Path="src/Lisere.Infrastructure/Lisere.Infrastructure.csproj" />
   <Project Path="src/Lisere.API/Lisere.API.csproj" />
   <Project Path="src/Lisere.Tests/Lisere.Tests.csproj" />
+  <Project Path="liserelink.client/liserelink.client.esproj" />
   <Folder Name="/StockApi/">
     <Project Path="src/Lisere.StockApi/Lisere.StockApi.Domain/Lisere.StockApi.Domain.csproj" />
     <Project Path="src/Lisere.StockApi/Lisere.StockApi.Application/Lisere.StockApi.Application.csproj" />

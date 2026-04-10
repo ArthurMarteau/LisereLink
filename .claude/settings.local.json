@@ -15,7 +15,8 @@
       "Bash(mkdir -p components/ui constants hooks layouts pages/admin services stores types utils)",
       "Bash(touch components/ui/.gitkeep constants/.gitkeep hooks/.gitkeep layouts/.gitkeep pages/admin/.gitkeep services/.gitkeep stores/.gitkeep types/.gitkeep utils/.gitkeep)",
       "Bash(npm run:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(echo \"EXIT:$?\")"
     ]
   }
 }

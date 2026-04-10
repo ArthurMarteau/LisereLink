@@ -8,6 +8,8 @@ public class RequestDto
 
     public Guid? StockistId { get; set; }
 
+    public string StoreId { get; set; } = string.Empty;
+
     /// <summary>ZoneType converti en string.</summary>
     public string Zone { get; set; } = string.Empty;
 

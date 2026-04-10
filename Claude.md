@@ -235,6 +235,18 @@ Both services use ExceptionHandlingMiddleware with ProblemDetails (RFC 7807):
 
 ---
 
+## Cross-project Consistency Rules
+
+Before implementing any API call (frontend → Lisere.API, or Lisere.API → Lisere.StockApi), always verify by **reading the actual source file** — never assume from the caller side:
+
+1. **Query param names** — read the controller's `[FromQuery]` parameter names before writing the client call. Example: the articles search param is `query`, not `search`.
+2. **DTO field names** — C# DTOs serialize as camelCase on the wire (System.Text.Json default). Confirm field names match between backend DTO and frontend TypeScript interface.
+3. **storeId type** — `Lisere.StockApi` uses `string` store codes (e.g. `"002"`), NOT Guids. `Lisere.API` uses Guids for its own entities. The frontend must store and pass the store **code** (string), not the store Guid. Never mix them.
+4. **Enum string values** — enums are serialized as strings (`JsonStringEnumConverter`). Confirm exact casing matches between backend enums and frontend constants.
+5. **When in doubt, grep** — search the codebase for the field or param name before writing new code. Do not assume consistency exists.
+
+---
+
 ## Don't
 
 - Don't put business logic in controllers
@@ -247,6 +259,7 @@ Both services use ExceptionHandlingMiddleware with ProblemDetails (RFC 7807):
 - Don't add Create/Update/Delete to ArticlesController in Lisere.API
 - Don't modify stock from Lisere.API — all stock writes go through Lisere.StockApi.API
 - Don't add ASP.NET Identity to Lisere.StockApi — JWT validation only
-- - Don't use `useEffect` for data fetching — call Axios directly in event handlers or Zustand actions 
+- Don't use `useEffect` for data fetching — call Axios directly in event handlers or Zustand actions
 - Don't use `useEffect` to sync two pieces of state — derive it with `useMemo` instead
+- Don't assume parameter names are consistent across projects — always read the actual controller signature before writing any client call
 

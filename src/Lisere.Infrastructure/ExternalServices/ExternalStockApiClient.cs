@@ -81,9 +81,25 @@ public class ExternalStockApiClient : IExternalStockApiClient
         }
     }
 
+    public async Task<IEnumerable<StoreDto>> GetStoresAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<IEnumerable<StockApiStoreResponse>>(
+                "api/stores", cancellationToken) ?? [];
+
+            return response.Select(s => new StoreDto { Id = s.Id, Name = s.Name, Code = s.Code });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "StockApi indisponible — GetStoresAsync a échoué.");
+            return [];
+        }
+    }
+
     public async Task<IEnumerable<StockDto>> GetStockAsync(
         Guid articleId,
-        Guid storeId,
+        string storeId,
         CancellationToken cancellationToken = default)
     {
         try

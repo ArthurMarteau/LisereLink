@@ -15,6 +15,7 @@ public interface IArticleRepository
     Task<(IEnumerable<Article> Items, int TotalCount)> GetAllAsync(
         int page,
         int pageSize,
+        string? query = null,
         CancellationToken cancellationToken = default);
     
     Task<IEnumerable<Article>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);

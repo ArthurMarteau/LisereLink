@@ -108,12 +108,13 @@ public class StockService : IStockService
     public async Task<PagedResult<ArticleDto>> GetArticlesAsync(
         int page,
         int pageSize,
+        string? query = null,
         CancellationToken cancellationToken = default)
     {
         pageSize = Math.Min(pageSize, 50);
         page = Math.Max(page, 1);
 
-        var (items, totalCount) = await _articleRepository.GetAllAsync(page, pageSize, cancellationToken);
+        var (items, totalCount) = await _articleRepository.GetAllAsync(page, pageSize, query, cancellationToken);
 
         return new PagedResult<ArticleDto>
         {

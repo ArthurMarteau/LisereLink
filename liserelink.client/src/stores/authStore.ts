@@ -28,7 +28,7 @@ export const useAuthStore = create<AuthState>()(
       setToken: (token) => set({ token }),
       setUser: (user) => set({ user }),
       setStore: (storeId, storeName) =>
-        set({ selectedStoreId: storeId, selectedStoreName: storeName }),
+        set({ selectedStoreId: storeId, selectedStoreName: storeName, selectedZone: null }),
       setZone: (zone) => set({ selectedZone: zone }),
       logout: () =>
         set({

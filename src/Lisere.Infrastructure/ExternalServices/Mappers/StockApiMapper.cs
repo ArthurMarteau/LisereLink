@@ -21,7 +21,7 @@ internal static class StockApiMapper
     {
         ArticleId         = s.ArticleId,
         Size              = s.Size,
-        StoreId           = s.StoreId.ToString(),
+        StoreId           = s.StoreId,
         AvailableQuantity = s.AvailableQuantity,
     };
 }

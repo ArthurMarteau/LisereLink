@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using Lisere.Application.DTOs;
 using Lisere.Application.Interfaces;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
@@ -12,7 +13,7 @@ public class StockService : IStockService
     private readonly IExternalStockApiClient _apiClient;
     private readonly IDistributedCache _cache;
     private readonly ILogger<StockService> _logger;
-    private readonly Guid _storeId;
+    private readonly string _storeId;
 
     private static readonly DistributedCacheEntryOptions CacheOptions = new()
     {
@@ -28,7 +29,7 @@ public class StockService : IStockService
         _apiClient = apiClient;
         _cache = cache;
         _logger = logger;
-        _storeId = Guid.TryParse(configuration["Store:StoreId"], out var id) ? id : Guid.Empty;
+        _storeId = configuration["Store:StoreId"] ?? string.Empty;
     }
 
     public async Task<int> GetAvailabilityAsync(
@@ -59,5 +60,13 @@ public class StockService : IStockService
     {
         var quantity = await GetAvailabilityAsync(articleId, size, cancellationToken);
         return quantity > 0;
+    }
+
+    public async Task<IEnumerable<StockDto>> GetStockForStoreAsync(
+        Guid articleId,
+        string storeId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _apiClient.GetStockAsync(articleId, storeId, cancellationToken);
     }
 }

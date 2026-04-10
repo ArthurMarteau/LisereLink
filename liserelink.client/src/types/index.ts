@@ -36,6 +36,7 @@ export interface UserDto {
 export interface StoreDto {
   id: string;
   name: string;
+  code: string;
 }
 
 export interface RequestLineDto {
@@ -56,11 +57,25 @@ export interface RequestDto {
   id: string;
   sellerId: string;
   stockistId?: string;
+  storeId: string;
   zone: ZoneType;
   status: RequestStatus;
   lines: RequestLineDto[];
   createdAt: string;
   completedAt?: string;
+}
+
+export interface AuthUserDto {
+  id: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
+}
+
+export interface AuthResponseDto {
+  token: string;
+  expiresAt: string;
+  user: AuthUserDto;
 }
 
 export interface Notification {

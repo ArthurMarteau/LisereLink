@@ -20,11 +20,12 @@ public class ArticlesController : ControllerBase
     
     [HttpGet]
     public async Task<IActionResult> GetAll(
+        [FromQuery] string? query = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
-        var result = await _stockService.GetArticlesAsync(page, pageSize, cancellationToken);
+        var result = await _stockService.GetArticlesAsync(page, pageSize, query, cancellationToken);
         return Ok(result);
     }
     

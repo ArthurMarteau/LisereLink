@@ -20,16 +20,16 @@ public class RequestsController : ControllerBase
         _requestService = requestService;
     }
 
-    /// <summary>Liste paginée des demandes, filtrable par zone et statut.</summary>
+    /// <summary>Liste paginée des demandes, filtrable par magasin et zone.</summary>
     [HttpGet]
     public async Task<ActionResult<PagedResult<RequestDto>>> GetAll(
+        [FromQuery] string? storeId = null,
         [FromQuery] string? zone = null,
-        [FromQuery] string? status = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        var result = await _requestService.GetAllAsync(page, pageSize, cancellationToken);
+        var result = await _requestService.GetAllAsync(page, pageSize, storeId, zone, cancellationToken);
         return Ok(result);
     }
 
@@ -82,5 +82,31 @@ public class RequestsController : ControllerBase
     {
         await _requestService.CancelAsync(id, cancellationToken);
         return NoContent();
+    }
+
+    /// <summary>Le vendeur accepte l'alternative proposée par le stockiste.</summary>
+    [HttpPost("{id:guid}/accept-alternative")]
+    [ProducesResponseType(typeof(RequestDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<RequestDto>> AcceptAlternative(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var request = await _requestService.AcceptAlternativeAsync(id, cancellationToken);
+        return Ok(request);
+    }
+
+    /// <summary>Le vendeur refuse l'alternative proposée par le stockiste.</summary>
+    [HttpPost("{id:guid}/reject-alternative")]
+    [ProducesResponseType(typeof(RequestDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<RequestDto>> RejectAlternative(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var request = await _requestService.RejectAlternativeAsync(id, cancellationToken);
+        return Ok(request);
     }
 }
