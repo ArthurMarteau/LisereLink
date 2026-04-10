@@ -8,6 +8,8 @@ public class Request : BaseEntity
 
     public Guid? StockistId { get; set; }
 
+    public string StoreId { get; set; } = string.Empty;
+
     public ZoneType Zone { get; set; }
 
     public RequestStatus Status { get; set; }

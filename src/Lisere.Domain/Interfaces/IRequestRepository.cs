@@ -7,7 +7,12 @@ public interface IRequestRepository
 {
     Task<Request?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<(IEnumerable<Request> Items, int TotalCount)> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<(IEnumerable<Request> Items, int TotalCount)> GetAllAsync(
+        int page,
+        int pageSize,
+        string? storeId = null,
+        string? zone = null,
+        CancellationToken cancellationToken = default);
 
     Task AddAsync(Request request, CancellationToken cancellationToken = default);
 

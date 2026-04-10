@@ -10,6 +10,7 @@ import StoreSelectionPage from '@/pages/StoreSelectionPage';
 import UnauthorizedPage from '@/pages/UnauthorizedPage';
 import SearchPage from '@/pages/seller/SearchPage';
 import ScanPage from '@/pages/seller/ScanPage';
+import ArticleDetailPage from '@/pages/seller/ArticleDetailPage';
 import RequestsPage from '@/pages/seller/RequestsPage';
 import SellerHistoryPage from '@/pages/seller/HistoryPage';
 import QueuePage from '@/pages/stockist/QueuePage';
@@ -39,6 +40,7 @@ export default function AppRouter() {
           <Route element={<SellerLayout />}>
             <Route path="/search" element={<SearchPage />} />
             <Route path="/scan" element={<ScanPage />} />
+            <Route path="/article/:id" element={<ArticleDetailPage />} />
             <Route path="/requests" element={<RequestsPage />} />
             <Route path="/history" element={<SellerHistoryPage />} />
           </Route>

@@ -5,7 +5,7 @@ import { ChevronRight } from 'lucide-react';
 import apiClient from '@/services/apiClient';
 import { useAuthStore } from '@/stores/authStore';
 import { UserRole } from '@/constants/enums';
-import type { PagedResult, StoreDto } from '@/types';
+import type { StoreDto } from '@/types';
 
 // ── Inner component: uses() suspends until stores are ready ─────────────────
 
@@ -29,7 +29,7 @@ function StoreList({ promise, selectedId, onSelect }: StoreListProps) {
   return (
     <ul className="space-y-[10px]">
       {stores.map((store) => {
-        const isSelected = store.id === selectedId;
+        const isSelected = store.code === selectedId;
         return (
           <li key={store.id}>
             <button
@@ -76,8 +76,8 @@ export default function StoreSelectionPage() {
 
   const [storesPromise] = useState<Promise<StoreDto[]>>(() =>
     apiClient
-      .get<PagedResult<StoreDto>>('/stores')
-      .then((r) => r.data.items)
+      .get<StoreDto[]>('/stores')
+      .then((r) => r.data)
       .catch(() => {
         toast.error('Impossible de charger la liste des magasins.');
         return [] as StoreDto[];
@@ -88,7 +88,7 @@ export default function StoreSelectionPage() {
 
   function handleConfirm() {
     if (!selectedStore) return;
-    useAuthStore.getState().setStore(selectedStore.id, selectedStore.name);
+    useAuthStore.getState().setStore(selectedStore.code, selectedStore.name);
     if (user?.role === UserRole.Seller) navigate('/search');
     else if (user?.role === UserRole.Stockist) navigate('/queue');
     else navigate('/admin');
@@ -113,7 +113,7 @@ export default function StoreSelectionPage() {
         <Suspense fallback={<StoreSkeleton />}>
           <StoreList
             promise={storesPromise}
-            selectedId={selectedStore?.id ?? null}
+            selectedId={selectedStore?.code ?? null}
             onSelect={setSelectedStore}
           />
         </Suspense>

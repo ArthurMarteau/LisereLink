@@ -21,6 +21,7 @@ public interface IStockService
     Task<PagedResult<ArticleDto>> GetArticlesAsync(
         int page,
         int pageSize,
+        string? query = null,
         CancellationToken cancellationToken = default);
 
     Task<ArticleDto?> GetArticleByBarcodeAsync(

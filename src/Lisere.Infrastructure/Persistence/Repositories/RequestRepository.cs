@@ -26,6 +26,8 @@ public class RequestRepository : IRequestRepository
     public async Task<(IEnumerable<Request> Items, int TotalCount)> GetAllAsync(
         int page,
         int pageSize,
+        string? storeId = null,
+        string? zone = null,
         CancellationToken cancellationToken = default)
     {
         pageSize = Math.Min(pageSize, 50);
@@ -35,7 +37,15 @@ public class RequestRepository : IRequestRepository
             .Include(r => r.Lines)
             .Include(r => r.Seller)
             .Include(r => r.Stockist)
-            .OrderByDescending(r => r.CreatedAt);
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(storeId))
+            query = query.Where(r => r.StoreId == storeId);
+
+        if (!string.IsNullOrEmpty(zone) && Enum.TryParse<ZoneType>(zone, ignoreCase: true, out var zoneType))
+            query = query.Where(r => r.Zone == zoneType);
+
+        query = query.OrderByDescending(r => r.CreatedAt);
 
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query

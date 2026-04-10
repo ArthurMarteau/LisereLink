@@ -65,12 +65,14 @@ public class RequestService : IRequestService
     public async Task<PagedResult<RequestDto>> GetAllAsync(
         int page,
         int pageSize,
+        string? storeId = null,
+        string? zone = null,
         CancellationToken cancellationToken = default)
     {
         pageSize = Math.Min(pageSize, 50);
         page = Math.Max(page, 1);
 
-        var (items, totalCount) = await _requestRepository.GetAllAsync(page, pageSize, cancellationToken);
+        var (items, totalCount) = await _requestRepository.GetAllAsync(page, pageSize, storeId, zone, cancellationToken);
 
         return new PagedResult<RequestDto>
         {
@@ -124,5 +126,47 @@ public class RequestService : IRequestService
         _ = _notificationService.NotifyRequestCancelledAsync(id, sellerId).ContinueWith(
             t => _logger.LogWarning(t.Exception, "Échec de la notification SignalR (RequestCancelled)."),
             TaskContinuationOptions.OnlyOnFaulted);
+    }
+
+    public async Task<RequestDto> AcceptAlternativeAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var request = await _requestRepository.GetByIdAsync(id, cancellationToken)
+            ?? throw new KeyNotFoundException($"Demande {id} introuvable.");
+
+        if (request.Status != RequestStatus.AwaitingSellerResponse)
+            throw new BusinessException("La demande doit être en attente de réponse vendeur pour accepter une alternative.");
+
+        request.Status = RequestStatus.InProgress;
+        request.ModifiedAt = DateTime.UtcNow;
+
+        await _requestRepository.UpdateAsync(request, cancellationToken);
+        var requestDto = request.ToDto();
+
+        _ = _notificationService.NotifyRequestUpdatedAsync(requestDto).ContinueWith(
+            t => _logger.LogWarning(t.Exception, "Échec de la notification SignalR (AcceptAlternative)."),
+            TaskContinuationOptions.OnlyOnFaulted);
+
+        return requestDto;
+    }
+
+    public async Task<RequestDto> RejectAlternativeAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var request = await _requestRepository.GetByIdAsync(id, cancellationToken)
+            ?? throw new KeyNotFoundException($"Demande {id} introuvable.");
+
+        if (request.Status != RequestStatus.AwaitingSellerResponse)
+            throw new BusinessException("La demande doit être en attente de réponse vendeur pour rejeter une alternative.");
+
+        request.Status = RequestStatus.Unavailable;
+        request.ModifiedAt = DateTime.UtcNow;
+
+        await _requestRepository.UpdateAsync(request, cancellationToken);
+        var requestDto = request.ToDto();
+
+        _ = _notificationService.NotifyRequestUpdatedAsync(requestDto).ContinueWith(
+            t => _logger.LogWarning(t.Exception, "Échec de la notification SignalR (RejectAlternative)."),
+            TaskContinuationOptions.OnlyOnFaulted);
+
+        return requestDto;
     }
 }

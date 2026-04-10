@@ -9,6 +9,10 @@ public class CreateRequestDto
     public Guid SellerId { get; set; }
 
     [Required]
+    [MaxLength(20)]
+    public string StoreId { get; set; } = string.Empty;
+
+    [Required]
     public ZoneType Zone { get; set; }
 
     [Required]

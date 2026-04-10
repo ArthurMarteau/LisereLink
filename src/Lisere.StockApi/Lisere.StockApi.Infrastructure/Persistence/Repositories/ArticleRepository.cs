@@ -35,17 +35,28 @@ public class ArticleRepository : IArticleRepository
     public async Task<(IEnumerable<Article> Items, int TotalCount)> GetAllAsync(
         int page,
         int pageSize,
+        string? query = null,
         CancellationToken cancellationToken = default)
     {
         pageSize = Math.Min(pageSize, 50);
         page = Math.Max(page, 1);
 
-        var query = _context.Articles
+        var dbQuery = _context.Articles.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var lower = query.ToLower();
+            dbQuery = dbQuery.Where(a =>
+                a.Name.ToLower().Contains(lower) ||
+                a.ColorOrPrint.ToLower().Contains(lower));
+        }
+
+        dbQuery = dbQuery
             .OrderBy(a => a.Family)
             .ThenBy(a => a.Name);
 
-        var totalCount = await query.CountAsync(cancellationToken);
-        var items = await query
+        var totalCount = await dbQuery.CountAsync(cancellationToken);
+        var items = await dbQuery
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);

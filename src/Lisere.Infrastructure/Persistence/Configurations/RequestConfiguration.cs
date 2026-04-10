@@ -40,8 +40,13 @@ public class RequestConfiguration : IEntityTypeConfiguration<Request>
             .HasForeignKey(l => l.RequestId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Property(r => r.StoreId)
+            .IsRequired()
+            .HasMaxLength(20);
+
         builder.HasIndex(r => r.Status);
         builder.HasIndex(r => r.Zone);
+        builder.HasIndex(r => r.StoreId);
         builder.HasIndex(r => r.CreatedAt);
 
         builder.HasQueryFilter(r => !r.IsDeleted);

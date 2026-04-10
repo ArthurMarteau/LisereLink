@@ -11,6 +11,7 @@ public static class RequestMappingExtensions
         Id          = request.Id,
         SellerId    = request.SellerId,
         StockistId  = request.StockistId,
+        StoreId     = request.StoreId,
         Zone        = request.Zone.ToString(),
         Status      = request.Status.ToString(),
         CreatedAt   = request.CreatedAt,
@@ -22,6 +23,7 @@ public static class RequestMappingExtensions
     {
         Id       = Guid.NewGuid(),
         SellerId = dto.SellerId,
+        StoreId  = dto.StoreId,
         Zone     = dto.Zone,
         Status   = RequestStatus.Pending,
         Lines    = dto.Lines.Select(l => l.ToEntity()).ToList(),
