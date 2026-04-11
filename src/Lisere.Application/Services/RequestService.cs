@@ -34,7 +34,7 @@ public class RequestService : IRequestService
         {
             foreach (var size in line.RequestedSizes)
             {
-                var isAvailable = await _stockService.IsAvailableAsync(line.ArticleId, size, cancellationToken);
+                var isAvailable = await _stockService.IsAvailableAsync(line.ArticleId, size, dto.StoreId, cancellationToken);
                 if (!isAvailable)
                     throw new BusinessException(
                         $"Stock insuffisant pour l'article {line.ArticleId} en taille {size}.");

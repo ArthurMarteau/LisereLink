@@ -46,16 +46,23 @@ public static class DependencyInjection
                 configuration["ExternalStockApi:BaseUrl"] ?? "https://localhost:5200");
         });
 
-        // Redis distributed cache
-        services.AddStackExchangeRedisCache(options =>
+        // Distributed cache — mémoire en Development, Redis sinon
+        if (env.IsDevelopment())
         {
-            options.Configuration = configuration.GetConnectionString("Redis");
-        });
+            services.AddDistributedMemoryCache();
+        }
+        else
+        {
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = configuration.GetConnectionString("Redis");
+            });
 
-        // Redis IConnectionMultiplexer — pour les opérations par pattern (webhooks)
-        services.AddSingleton<IConnectionMultiplexer>(_ =>
-            ConnectionMultiplexer.Connect(
-                configuration.GetConnectionString("Redis") ?? "localhost:6379"));
+            // Redis IConnectionMultiplexer — pour les opérations par pattern (webhooks)
+            services.AddSingleton<IConnectionMultiplexer>(_ =>
+                ConnectionMultiplexer.Connect(
+                    configuration.GetConnectionString("Redis") ?? "localhost:6379"));
+        }
 
         // Stock service
         services.AddScoped<IStockService, StockService>();

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import apiClient from '@/services/apiClient';
 import { useArticleStore } from '@/stores/useArticleStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useRequestActions } from '@/hooks/useRequestActions';
 import SizeChip from '@/components/ui/SizeChip';
 import type { StockDto } from '@/types';
 import type { Size } from '@/constants/enums';
@@ -93,6 +94,8 @@ export default function ArticleDetailPage() {
   const selectedStoreId = useAuthStore((s) => s.selectedStoreId);
   const selectedZone = useAuthStore((s) => s.selectedZone);
   const [selectedSizes, setSelectedSizes] = useState<Size[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { createRequest } = useRequestActions();
 
   // Load stock once at mount — no useEffect, Promise created in useState initializer
   const [stockPromise] = useState<Promise<StockDto[]>>(() => {
@@ -114,13 +117,17 @@ export default function ArticleDetailPage() {
     );
   }, []);
 
-  function handleSubmit() {
-    if (!selectedZone) {
-      toast.error("Sélectionnez une zone d'abord.");
-      return;
+  async function handleSubmit() {
+    if (!selectedZone || !selectedArticle || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await createRequest(selectedArticle, selectedSizes);
+      navigate('/requests');
+    } catch {
+      // createRequest already shows the error toast
+    } finally {
+      setIsSubmitting(false);
     }
-    // Submission flow implemented in next step
-    navigate('/requests');
   }
 
   if (!selectedArticle) {
@@ -203,11 +210,11 @@ export default function ArticleDetailPage() {
         )}
         <button
           type="button"
-          onClick={handleSubmit}
-          disabled={!canSubmit}
+          onClick={() => void handleSubmit()}
+          disabled={!canSubmit || isSubmitting}
           className="w-full py-4 bg-[#121212] text-white font-[Oswald] text-[13px] tracking-[2.5px] uppercase disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         >
-          Soumettre la demande
+          {isSubmitting ? 'Envoi en cours...' : 'Soumettre la demande'}
         </button>
       </div>
     </div>

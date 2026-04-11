@@ -18,7 +18,7 @@ public class StockServiceGetArticlesTests : StockServiceTestBase
             BuildArticle("1234567890002"),
         };
 
-        ArticleRepo.GetAllAsync(1, 20, Arg.Any<CancellationToken>())
+        ArticleRepo.GetAllAsync(1, 20, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns((articles.AsEnumerable(), 2));
 
         var result = await Service.GetArticlesAsync(1, 20);
@@ -32,30 +32,30 @@ public class StockServiceGetArticlesTests : StockServiceTestBase
     [Fact]
     public async Task GetArticlesAsync_CapsPageSizeAt50()
     {
-        ArticleRepo.GetAllAsync(1, 50, Arg.Any<CancellationToken>())
+        ArticleRepo.GetAllAsync(1, 50, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns((Enumerable.Empty<Article>(), 0));
 
         await Service.GetArticlesAsync(1, 999);
 
-        await ArticleRepo.Received(1).GetAllAsync(1, 50, Arg.Any<CancellationToken>());
+        await ArticleRepo.Received(1).GetAllAsync(1, 50, Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetArticlesAsync_ClampPageToMinimumOfOne()
     {
-        ArticleRepo.GetAllAsync(1, 20, Arg.Any<CancellationToken>())
+        ArticleRepo.GetAllAsync(1, 20, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns((Enumerable.Empty<Article>(), 0));
 
         await Service.GetArticlesAsync(0, 20);
 
-        await ArticleRepo.Received(1).GetAllAsync(1, 20, Arg.Any<CancellationToken>());
+        await ArticleRepo.Received(1).GetAllAsync(1, 20, Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetArticlesAsync_MapsArticleFieldsCorrectly()
     {
         var article = BuildArticle("9999999999999");
-        ArticleRepo.GetAllAsync(1, 10, Arg.Any<CancellationToken>())
+        ArticleRepo.GetAllAsync(1, 10, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns((new[] { article }.AsEnumerable(), 1));
 
         var result = await Service.GetArticlesAsync(1, 10);

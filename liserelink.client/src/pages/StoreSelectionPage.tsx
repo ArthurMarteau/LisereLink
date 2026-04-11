@@ -17,8 +17,9 @@ interface StoreListProps {
 
 function StoreList({ promise, selectedId, onSelect }: StoreListProps) {
   const stores = use(promise);
+  const visibleStores = stores.filter(s => s.code.toLowerCase() !== 'online');
 
-  if (stores.length === 0) {
+  if (visibleStores.length === 0) {
     return (
       <p className="font-[Oswald] text-[11px] tracking-[2px] uppercase text-[#969696] py-4 text-center">
         Aucun magasin disponible
@@ -28,7 +29,7 @@ function StoreList({ promise, selectedId, onSelect }: StoreListProps) {
 
   return (
     <ul className="space-y-[10px]">
-      {stores.map((store) => {
+      {visibleStores.map((store) => {
         const isSelected = store.code === selectedId;
         return (
           <li key={store.id}>

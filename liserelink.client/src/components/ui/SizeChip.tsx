@@ -10,6 +10,16 @@ interface SizeChipProps {
 export default function SizeChip({ size, available, selected, onClick }: SizeChipProps) {
   const base = 'font-[Oswald] text-[10px] px-2 py-0.5 min-h-[28px] min-w-[32px] tracking-[1px] uppercase transition-colors';
 
+  if (onClick === undefined) {
+    if (!available) {
+      return <span className={`${base} border border-[#e1e1e1] text-[#bcbcbc] line-through`}>{size}</span>;
+    }
+    if (selected) {
+      return <span className={`${base} border border-[#121212] bg-[#121212] text-white`}>{size}</span>;
+    }
+    return <span className={`${base} border border-[#121212] text-[#121212]`}>{size}</span>;
+  }
+
   if (!available) {
     return (
       <button
