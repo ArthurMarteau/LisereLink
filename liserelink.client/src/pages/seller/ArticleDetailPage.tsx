@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import apiClient from '@/services/apiClient';
 import { useArticleStore } from '@/stores/useArticleStore';
 import { useAuthStore } from '@/stores/authStore';
-import { useRequestActions } from '@/hooks/useRequestActions';
+import { useCartStore } from '@/stores/useCartStore';
 import SizeChip from '@/components/ui/SizeChip';
 import type { StockDto } from '@/types';
 import type { Size } from '@/constants/enums';
@@ -94,8 +94,7 @@ export default function ArticleDetailPage() {
   const selectedStoreId = useAuthStore((s) => s.selectedStoreId);
   const selectedZone = useAuthStore((s) => s.selectedZone);
   const [selectedSizes, setSelectedSizes] = useState<Size[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { createRequest } = useRequestActions();
+  const addLine = useCartStore((s) => s.addLine);
 
   // Load stock once at mount — no useEffect, Promise created in useState initializer
   const [stockPromise] = useState<Promise<StockDto[]>>(() => {
@@ -117,17 +116,19 @@ export default function ArticleDetailPage() {
     );
   }, []);
 
-  async function handleSubmit() {
-    if (!selectedZone || !selectedArticle || isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      await createRequest(selectedArticle, selectedSizes);
-      navigate('/requests');
-    } catch {
-      // createRequest already shows the error toast
-    } finally {
-      setIsSubmitting(false);
+  function handleAddToCart() {
+    if (!selectedArticle) return;
+    for (const size of selectedSizes) {
+      addLine({
+        articleId: selectedArticle.id,
+        articleName: selectedArticle.name,
+        colorOrPrint: selectedArticle.colorOrPrint,
+        barcode: selectedArticle.barcode,
+        size,
+        quantity: 1,
+      });
     }
+    navigate('/cart');
   }
 
   if (!selectedArticle) {
@@ -201,7 +202,7 @@ export default function ArticleDetailPage() {
         </Suspense>
       </div>
 
-      {/* Submit */}
+      {/* Add to cart */}
       <div className="px-5 pt-2">
         {!selectedZone && (
           <p className="font-[Oswald] text-[11px] tracking-[2px] uppercase text-[#e51940] mb-3">
@@ -210,11 +211,11 @@ export default function ArticleDetailPage() {
         )}
         <button
           type="button"
-          onClick={() => void handleSubmit()}
-          disabled={!canSubmit || isSubmitting}
+          onClick={handleAddToCart}
+          disabled={!canSubmit}
           className="w-full py-4 bg-[#121212] text-white font-[Oswald] text-[13px] tracking-[2.5px] uppercase disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         >
-          {isSubmitting ? 'Envoi en cours...' : 'Soumettre la demande'}
+          Ajouter à la demande
         </button>
       </div>
     </div>

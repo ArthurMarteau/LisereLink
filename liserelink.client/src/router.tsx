@@ -12,6 +12,7 @@ import SearchPage from '@/pages/seller/SearchPage';
 import ScanPage from '@/pages/seller/ScanPage';
 import ArticleDetailPage from '@/pages/seller/ArticleDetailPage';
 import RequestsPage from '@/pages/seller/RequestsPage';
+import CartPage from '@/pages/seller/CartPage';
 import SellerHistoryPage from '@/pages/seller/HistoryPage';
 import QueuePage from '@/pages/stockist/QueuePage';
 import InProgressPage from '@/pages/stockist/InProgressPage';
@@ -42,6 +43,7 @@ export default function AppRouter() {
             <Route path="/scan" element={<ScanPage />} />
             <Route path="/article/:id" element={<ArticleDetailPage />} />
             <Route path="/requests" element={<RequestsPage />} />
+            <Route path="/cart" element={<CartPage />} />
             <Route path="/history" element={<SellerHistoryPage />} />
           </Route>
         </Route>

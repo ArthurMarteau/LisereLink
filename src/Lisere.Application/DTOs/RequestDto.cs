@@ -6,7 +6,15 @@ public class RequestDto
 
     public Guid SellerId { get; set; }
 
+    public string SellerFirstName { get; set; } = string.Empty;
+
+    public string SellerLastName { get; set; } = string.Empty;
+
     public Guid? StockistId { get; set; }
+
+    public string? StockistFirstName { get; set; }
+
+    public string? StockistLastName { get; set; }
 
     public string StoreId { get; set; } = string.Empty;
 

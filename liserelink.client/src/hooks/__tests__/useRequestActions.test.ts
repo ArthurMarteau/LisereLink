@@ -11,8 +11,8 @@ vi.mock('idb-keyval', () => ({
 import { useRequestActions } from '@/hooks/useRequestActions';
 import { useAuthStore } from '@/stores/authStore';
 import { useRequestStore } from '@/stores/useRequestStore';
-import { RequestStatus, Size, UserRole, ZoneType } from '@/constants/enums';
-import type { ArticleDto, ProblemDetails, RequestDto } from '@/types';
+import { RequestStatus, UserRole, ZoneType } from '@/constants/enums';
+import type { RequestDto } from '@/types';
 
 vi.mock('@/services/apiClient', () => ({
   default: {
@@ -37,15 +37,6 @@ const mockUser = {
   firstName: 'Alice',
   lastName: 'Dupont',
   role: UserRole.Seller,
-};
-
-const mockArticle: ArticleDto = {
-  id: 'article-1',
-  barcode: '3400936123450',
-  family: 'DRE' as never,
-  name: 'Robe Rouge',
-  colorOrPrint: 'Rouge',
-  availableSizes: [Size.S, Size.M],
 };
 
 const mockRequest: RequestDto = {
@@ -75,137 +66,6 @@ beforeEach(() => {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('useRequestActions', () => {
-  describe('createRequest', () => {
-    it('creates a request and adds it to the store on success', async () => {
-      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: mockRequest });
-      const { result } = renderHook(() => useRequestActions());
-
-      await act(async () => {
-        await result.current.createRequest(mockArticle, [Size.S]);
-      });
-
-      expect(useRequestStore.getState().requests).toContainEqual(mockRequest);
-    });
-
-    it('calls POST /api/requests with correct payload (articleId, sizes, zone, storeId, sellerId)', async () => {
-      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: mockRequest });
-      const { result } = renderHook(() => useRequestActions());
-
-      await act(async () => {
-        await result.current.createRequest(mockArticle, [Size.S, Size.M]);
-      });
-
-      expect(apiClient.post).toHaveBeenCalledWith(
-        '/requests',
-        expect.objectContaining({
-          sellerId: mockUser.id,
-          storeId: '002',
-          zone: ZoneType.RTW,
-          lines: [
-            expect.objectContaining({
-              articleId: mockArticle.id,
-              requestedSizes: [Size.S, Size.M],
-            }),
-          ],
-        }),
-      );
-    });
-
-    it('payload includes storeId from authStore.selectedStoreId (store code string)', async () => {
-      useAuthStore.setState({ selectedStoreId: '007' });
-      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: { ...mockRequest, storeId: '007' } });
-      const { result } = renderHook(() => useRequestActions());
-
-      await act(async () => {
-        await result.current.createRequest(mockArticle, [Size.S]);
-      });
-
-      expect(apiClient.post).toHaveBeenCalledWith(
-        '/requests',
-        expect.objectContaining({ storeId: '007' }),
-      );
-    });
-
-    it('sets isLoading true during request, false after', async () => {
-      let resolvePost!: (value: unknown) => void;
-      vi.mocked(apiClient.post).mockReturnValueOnce(
-        new Promise((res) => {
-          resolvePost = res;
-        }),
-      );
-      const { result } = renderHook(() => useRequestActions());
-
-      const pending = result.current.createRequest(mockArticle, [Size.S]);
-      expect(useRequestStore.getState().isLoading).toBe(true);
-
-      await act(async () => {
-        resolvePost({ data: mockRequest });
-        await pending;
-      });
-      expect(useRequestStore.getState().isLoading).toBe(false);
-    });
-
-    it('throws ProblemDetails on 400 (stock unavailable)', async () => {
-      const problem: ProblemDetails = {
-        type: 'https://api.lisere.app/errors/stock',
-        title: 'Stock indisponible',
-        status: 400,
-        detail: 'Le stock est insuffisant pour cette taille.',
-        instance: '/api/requests',
-      };
-      vi.mocked(apiClient.post).mockRejectedValueOnce(problem);
-      const { result } = renderHook(() => useRequestActions());
-
-      let thrownError: unknown;
-      await act(async () => {
-        try {
-          await result.current.createRequest(mockArticle, [Size.S]);
-        } catch (e) {
-          thrownError = e;
-        }
-      });
-
-      expect(thrownError).toEqual(problem);
-    });
-
-    it('shows sonner error toast on API error', async () => {
-      vi.mocked(apiClient.post).mockRejectedValueOnce(new Error('Erreur réseau'));
-      const { result } = renderHook(() => useRequestActions());
-
-      await act(async () => {
-        try {
-          await result.current.createRequest(mockArticle, [Size.S]);
-        } catch {
-          // expected re-throw
-        }
-      });
-
-      expect(toast.error).toHaveBeenCalled();
-    });
-
-    it('does nothing if selectedZone is null (guard)', async () => {
-      useAuthStore.setState({ selectedZone: null });
-      const { result } = renderHook(() => useRequestActions());
-
-      await act(async () => {
-        await result.current.createRequest(mockArticle, [Size.S]);
-      });
-
-      expect(apiClient.post).not.toHaveBeenCalled();
-    });
-
-    it('does nothing if selectedStoreId is null (guard)', async () => {
-      useAuthStore.setState({ selectedStoreId: null });
-      const { result } = renderHook(() => useRequestActions());
-
-      await act(async () => {
-        await result.current.createRequest(mockArticle, [Size.S]);
-      });
-
-      expect(apiClient.post).not.toHaveBeenCalled();
-    });
-  });
-
   describe('cancelRequest', () => {
     it('calls DELETE /api/requests/{id} and removes from store on success', async () => {
       useRequestStore.setState({ requests: [mockRequest] });

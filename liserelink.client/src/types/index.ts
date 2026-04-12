@@ -43,6 +43,8 @@ export interface RequestLineDto {
   id: string;
   requestId: string;
   articleId: string;
+  articleName: string;
+  articleBarcode: string;
   colorOrPrint: string;
   requestedSizes: Size[];
   quantity: number;
@@ -56,7 +58,11 @@ export interface RequestLineDto {
 export interface RequestDto {
   id: string;
   sellerId: string;
+  sellerFirstName: string;
+  sellerLastName: string;
   stockistId?: string;
+  stockistFirstName?: string;
+  stockistLastName?: string;
   storeId: string;
   zone: ZoneType;
   status: RequestStatus;

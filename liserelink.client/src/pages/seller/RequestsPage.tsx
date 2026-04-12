@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useRequestStore } from '@/stores/useRequestStore';
 import { useRequestActions } from '@/hooks/useRequestActions';
+import { useCartStore } from '@/stores/useCartStore';
 import RequestCard from '@/components/ui/RequestCard';
 import { RequestStatus } from '@/constants/enums';
 import type { RequestDto } from '@/types';
@@ -32,10 +34,30 @@ const HISTORY_STATUSES = new Set<RequestStatus>([
 ]);
 
 export default function RequestsPage() {
+  const navigate = useNavigate();
   const requests = useRequestStore((s) => s.requests);
   const isLoading = useRequestStore((s) => s.isLoading);
   const { fetchRequests, cancelRequest, acceptAlternative, rejectAlternative } =
     useRequestActions();
+
+  function handleModify(request: RequestDto) {
+    const { clearCart, addLine, setEditRequestId } = useCartStore.getState();
+    clearCart();
+    setEditRequestId(request.id);
+    for (const line of request.lines) {
+      for (const size of line.requestedSizes) {
+        addLine({
+          articleId: line.articleId,
+          articleName: line.articleName,
+          colorOrPrint: line.colorOrPrint,
+          barcode: line.articleBarcode,
+          size,
+          quantity: 1,
+        });
+      }
+    }
+    navigate('/cart');
+  }
 
   // Legitimate initial sync side effect — fetchRequests reads storeId + zone from authStore
   useEffect(() => {
@@ -82,9 +104,7 @@ export default function RequestsPage() {
               }
               onModify={
                 request.status === RequestStatus.Pending
-                  ? () => {
-                      // Navigate back to article detail — to be wired to navigation
-                    }
+                  ? () => handleModify(request)
                   : undefined
               }
               onAcceptAlternative={

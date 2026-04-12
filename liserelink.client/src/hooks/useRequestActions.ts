@@ -4,8 +4,7 @@ import apiClient from '@/services/apiClient';
 import { useRequestStore } from '@/stores/useRequestStore';
 import { useAuthStore } from '@/stores/authStore';
 import { RequestStatus } from '@/constants/enums';
-import type { ArticleDto, PagedResult, ProblemDetails, RequestDto } from '@/types';
-import type { Size } from '@/constants/enums';
+import type { PagedResult, ProblemDetails, RequestDto } from '@/types';
 
 interface UpdateRequestPayload {
   status: RequestStatus;
@@ -24,46 +23,6 @@ function isProblemDetails(error: unknown): error is ProblemDetails {
 export function useRequestActions() {
   const { addRequest, removeRequest, updateRequest: storeUpdate, setLoading, setRequests } =
     useRequestStore();
-
-  // ── createRequest ──────────────────────────────────────────────────────────
-
-  const createRequest = useCallback(
-    async (article: ArticleDto, sizes: Size[]): Promise<void> => {
-      const { selectedStoreId, selectedZone, user } = useAuthStore.getState();
-
-      if (selectedZone === null) return;
-      if (selectedStoreId === null) return;
-
-      setLoading(true);
-      try {
-        const response = await apiClient.post<RequestDto>('/requests', {
-          sellerId: user!.id,
-          storeId: selectedStoreId,
-          zone: selectedZone,
-          lines: [
-            {
-              articleId: article.id,
-              articleName: article.name,
-              articleColorOrPrint: article.colorOrPrint,
-              articleBarcode: article.barcode,
-              requestedSizes: sizes,
-              quantity: 1,
-            },
-          ],
-        });
-        addRequest(response.data);
-      } catch (error) {
-        const message = isProblemDetails(error)
-          ? error.detail
-          : 'Impossible de créer la demande.';
-        toast.error(message);
-        throw error;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [addRequest, setLoading],
-  );
 
   // ── cancelRequest ──────────────────────────────────────────────────────────
 
@@ -180,7 +139,6 @@ export function useRequestActions() {
   );
 
   return {
-    createRequest,
     cancelRequest,
     updateRequest,
     fetchRequests,

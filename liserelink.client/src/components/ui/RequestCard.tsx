@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { RequestLineStatus, RequestStatus } from '@/constants/enums';
 import type { RequestDto } from '@/types';
 import StatusBadge from './StatusBadge';
@@ -41,6 +42,8 @@ export default function RequestCard({
   onAcceptAlternative,
   onRejectAlternative,
 }: RequestCardProps) {
+  const [confirmCancel, setConfirmCancel] = useState(false);
+
   const hasAlternative = request.lines.some(
     (l) => l.status === RequestLineStatus.AlternativeProposed,
   );
@@ -59,6 +62,9 @@ export default function RequestCard({
       {request.lines.map((line, i) => (
         <div key={line.id ?? i} className="mb-2">
           <p className="font-['Libre_Baskerville'] text-[14px] text-[#121212] leading-snug">
+            {line.articleName}
+          </p>
+          <p className="font-[Oswald] text-[11px] tracking-[1.5px] uppercase text-[#969696] mt-0.5">
             {line.colorOrPrint}
           </p>
           <p className="font-[Oswald] text-[11px] tracking-[1.5px] uppercase text-[#969696] mt-0.5">
@@ -66,6 +72,16 @@ export default function RequestCard({
           </p>
         </div>
       ))}
+
+      {/* Seller / stockist */}
+      <p className="font-[Oswald] text-[10px] tracking-[1.5px] uppercase text-[#969696] mt-2">
+        Par {request.sellerFirstName} {request.sellerLastName}
+      </p>
+      {request.stockistFirstName && (
+        <p className="font-[Oswald] text-[10px] tracking-[1.5px] uppercase text-[#969696]">
+          Pris en charge par {request.stockistFirstName} {request.stockistLastName}
+        </p>
+      )}
 
       {/* Alternative proposed section */}
       {hasAlternative && (
@@ -104,14 +120,32 @@ export default function RequestCard({
               Modifier
             </button>
           )}
-          {onCancel && (
+          {onCancel && !confirmCancel && (
             <button
               type="button"
-              onClick={onCancel}
+              onClick={() => setConfirmCancel(true)}
               className="flex-1 py-3 border border-[#e1e1e1] font-[Oswald] text-[12px] tracking-[2px] uppercase text-[#969696] min-h-[44px]"
             >
               Annuler
             </button>
+          )}
+          {onCancel && confirmCancel && (
+            <>
+              <button
+                type="button"
+                onClick={() => { onCancel(); setConfirmCancel(false); }}
+                className="flex-1 py-3 border border-[#e51940] font-[Oswald] text-[12px] tracking-[2px] uppercase text-[#e51940] min-h-[44px]"
+              >
+                Confirmer l'annulation
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmCancel(false)}
+                className="flex-1 py-3 border border-[#e1e1e1] font-[Oswald] text-[12px] tracking-[2px] uppercase text-[#969696] min-h-[44px]"
+              >
+                Ne pas annuler
+              </button>
+            </>
           )}
           {onAcceptAlternative && (
             <button
