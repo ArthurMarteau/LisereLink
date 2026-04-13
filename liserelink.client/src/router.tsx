@@ -12,10 +12,17 @@ import SearchPage from '@/pages/seller/SearchPage';
 import ScanPage from '@/pages/seller/ScanPage';
 import ArticleDetailPage from '@/pages/seller/ArticleDetailPage';
 import RequestsPage from '@/pages/seller/RequestsPage';
+import CartPage from '@/pages/seller/CartPage';
 import SellerHistoryPage from '@/pages/seller/HistoryPage';
+import RequestHistoryDetailPage from '@/pages/seller/RequestHistoryDetailPage';
 import QueuePage from '@/pages/stockist/QueuePage';
 import InProgressPage from '@/pages/stockist/InProgressPage';
 import StockistHistoryPage from '@/pages/stockist/HistoryPage';
+import StockistHistoryDetailPage from '@/pages/stockist/StockistHistoryDetailPage';
+import RequestDetailPage from '@/pages/stockist/RequestDetailPage';
+import StockistSearchPage from '@/pages/stockist/StockistSearchPage';
+import StockistScanPage from '@/pages/stockist/StockistScanPage';
+import StockistArticleDetailPage from '@/pages/stockist/StockistArticleDetailPage';
 import AdminStockPage from '@/pages/admin/StockPage';
 import CataloguePage from '@/pages/admin/CataloguePage';
 import AdminRequestsPage from '@/pages/admin/RequestsPage';
@@ -42,7 +49,9 @@ export default function AppRouter() {
             <Route path="/scan" element={<ScanPage />} />
             <Route path="/article/:id" element={<ArticleDetailPage />} />
             <Route path="/requests" element={<RequestsPage />} />
+            <Route path="/cart" element={<CartPage />} />
             <Route path="/history" element={<SellerHistoryPage />} />
+            <Route path="/history/:id" element={<RequestHistoryDetailPage />} />
           </Route>
         </Route>
 
@@ -50,8 +59,13 @@ export default function AppRouter() {
         <Route element={<ProtectedRoute role={UserRole.Stockist} />}>
           <Route element={<StockistLayout />}>
             <Route path="/queue" element={<QueuePage />} />
+            <Route path="/queue/:id" element={<RequestDetailPage />} />
             <Route path="/in-progress" element={<InProgressPage />} />
             <Route path="/stockist-history" element={<StockistHistoryPage />} />
+            <Route path="/stockist-history/:id" element={<StockistHistoryDetailPage />} />
+            <Route path="/stockist-search" element={<StockistSearchPage />} />
+            <Route path="/stockist-scan" element={<StockistScanPage />} />
+            <Route path="/stockist-article/:id" element={<StockistArticleDetailPage />} />
           </Route>
         </Route>
 

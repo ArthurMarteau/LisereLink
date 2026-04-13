@@ -18,6 +18,7 @@ public class RequestRepository : IRequestRepository
     {
         return await _context.Requests
             .Include(r => r.Lines)
+            .Include(r => r.AlternativeLines)
             .Include(r => r.Seller)
             .Include(r => r.Stockist)
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
@@ -35,6 +36,7 @@ public class RequestRepository : IRequestRepository
 
         var query = _context.Requests
             .Include(r => r.Lines)
+            .Include(r => r.AlternativeLines)
             .Include(r => r.Seller)
             .Include(r => r.Stockist)
             .AsQueryable();
@@ -64,7 +66,8 @@ public class RequestRepository : IRequestRepository
 
     public async Task UpdateAsync(Request request, CancellationToken cancellationToken = default)
     {
-        _context.Requests.Update(request);
+        // L'entité est déjà trackée par le même DbContext (chargée via GetByIdAsync)
+        // EF Core détecte automatiquement les changements — SaveChanges suffit
         await _context.SaveChangesAsync(cancellationToken);
     }
 
@@ -86,6 +89,7 @@ public class RequestRepository : IRequestRepository
     {
         return await _context.Requests
             .Include(r => r.Lines)
+            .Include(r => r.AlternativeLines)
             .Include(r => r.Seller)
             .Where(r => r.Zone == zone && r.Status == RequestStatus.Pending)
             .OrderBy(r => r.CreatedAt)

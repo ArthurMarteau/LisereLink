@@ -39,6 +39,7 @@ builder.Services.AddHttpClient<IWebhookNotifier, WebhookNotifier>();
 
 // ── Services ──────────────────────────────────────────────────────────────────
 builder.Services.AddScoped<IStockService, StockService>();
+builder.Services.AddScoped<IStoreService, StoreService>();
 
 // ── JWT validation uniquement (pas d'ASP.NET Identity) ───────────────────────
 var jwtSecret = builder.Configuration["Jwt:Secret"]

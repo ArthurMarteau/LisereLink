@@ -17,4 +17,6 @@ public interface IExternalStockApiClient
         CancellationToken cancellationToken = default);
 
     Task<ArticleDto?> GetArticleByBarcodeAsync(string barcode, CancellationToken cancellationToken = default);
+
+    Task<ArticleDto?> GetArticleByIdAsync(Guid id, CancellationToken cancellationToken = default);
 }

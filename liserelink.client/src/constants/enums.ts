@@ -2,7 +2,8 @@ export enum RequestStatus {
   Pending = 'Pending',
   InProgress = 'InProgress',
   AwaitingSellerResponse = 'AwaitingSellerResponse',
-  Delivered = 'Delivered',
+  Processed = 'Processed',
+  PartiallyProcessed = 'PartiallyProcessed',
   Unavailable = 'Unavailable',
   Cancelled = 'Cancelled',
 }
@@ -12,6 +13,7 @@ export enum RequestLineStatus {
   Found = 'Found',
   NotFound = 'NotFound',
   AlternativeProposed = 'AlternativeProposed',
+  AlternativeDenied = 'AlternativeDenied',
 }
 
 export enum UserRole {

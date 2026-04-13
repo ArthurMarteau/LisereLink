@@ -4,7 +4,6 @@ using Lisere.Application.DTOs;
 using Lisere.Application.Interfaces;
 using Lisere.Infrastructure.ExternalServices;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Xunit;
@@ -22,15 +21,7 @@ public class StockServiceTests
     {
         _apiClient = Substitute.For<IExternalStockApiClient>();
         _cache = Substitute.For<IDistributedCache>();
-
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Store:StoreId"] = _storeId.ToString()
-            })
-            .Build();
-
-        _sut = new StockService(_apiClient, _cache, config, NullLogger<StockService>.Instance);
+        _sut = new StockService(_apiClient, _cache, NullLogger<StockService>.Instance);
     }
 
     // ── GetAvailabilityAsync ─────────────────────────────────────────────────
@@ -44,11 +35,11 @@ public class StockServiceTests
         _cache.GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(cachedBytes);
 
-        var result = await _sut.GetAvailabilityAsync(articleId, "M");
+        var result = await _sut.GetAvailabilityAsync(articleId, "M", _storeId.ToString());
 
         Assert.Equal(7, result);
         await _apiClient.DidNotReceive()
-            .GetStockAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+            .GetStockAsync(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -59,13 +50,13 @@ public class StockServiceTests
         _cache.GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((byte[]?)null);
 
-        _apiClient.GetStockAsync(articleId, _storeId, Arg.Any<CancellationToken>())
+        _apiClient.GetStockAsync(articleId, _storeId.ToString(), Arg.Any<CancellationToken>())
             .Returns(new List<StockDto>
             {
                 new() { ArticleId = articleId, Size = "M", AvailableQuantity = 3 }
             });
 
-        var result = await _sut.GetAvailabilityAsync(articleId, "M");
+        var result = await _sut.GetAvailabilityAsync(articleId, "M", _storeId.ToString());
 
         Assert.Equal(3, result);
         await _cache.Received(1).SetAsync(
@@ -84,13 +75,13 @@ public class StockServiceTests
         _cache.GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((byte[]?)null);
 
-        _apiClient.GetStockAsync(articleId, _storeId, Arg.Any<CancellationToken>())
+        _apiClient.GetStockAsync(articleId, _storeId.ToString(), Arg.Any<CancellationToken>())
             .Returns(new List<StockDto>
             {
                 new() { ArticleId = articleId, Size = "L", AvailableQuantity = 5 }
             });
 
-        var result = await _sut.GetAvailabilityAsync(articleId, "M");
+        var result = await _sut.GetAvailabilityAsync(articleId, "M", _storeId.ToString());
 
         Assert.Equal(0, result);
     }
@@ -106,7 +97,7 @@ public class StockServiceTests
         _cache.GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(cachedBytes);
 
-        var result = await _sut.IsAvailableAsync(articleId, "M");
+        var result = await _sut.IsAvailableAsync(articleId, "M", _storeId.ToString());
 
         Assert.True(result);
     }
@@ -120,8 +111,31 @@ public class StockServiceTests
         _cache.GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(cachedBytes);
 
-        var result = await _sut.IsAvailableAsync(articleId, "M");
+        var result = await _sut.IsAvailableAsync(articleId, "M", _storeId.ToString());
 
         Assert.False(result);
+    }
+
+    [Fact]
+    public async Task GetAvailabilityAsync_UsesPassedStoreIdNotConfigStoreId()
+    {
+        var articleId = Guid.NewGuid();
+        const string passedStoreId = "002";
+
+        _cache.GetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns((byte[]?)null);
+
+        _apiClient.GetStockAsync(articleId, passedStoreId, Arg.Any<CancellationToken>())
+            .Returns(new List<StockDto>
+            {
+                new() { ArticleId = articleId, Size = "M", AvailableQuantity = 2 }
+            });
+
+        await _sut.GetAvailabilityAsync(articleId, "M", passedStoreId);
+
+        await _apiClient.Received(1).GetStockAsync(
+            articleId,
+            Arg.Is<string>(s => s == passedStoreId),
+            Arg.Any<CancellationToken>());
     }
 }

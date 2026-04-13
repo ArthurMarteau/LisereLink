@@ -22,11 +22,81 @@ namespace Lisere.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Lisere.Domain.Entities.AlternativeRequestLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ArticleBarcode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("ArticleColorOrPrint")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("ArticleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ArticleName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RequestedSizes")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<bool>("StockOverride")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestId");
+
+                    b.ToTable("AlternativeRequestLines");
+                });
+
             modelBuilder.Entity("Lisere.Domain.Entities.Request", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
@@ -93,19 +163,6 @@ namespace Lisere.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("AlternativeArticleId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("AlternativeColorOrPrint")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("AlternativeSizes")
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<bool>("AlternativeStockOverride")
-                        .HasColumnType("bit");
-
                     b.Property<string>("ArticleBarcode")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -148,9 +205,10 @@ namespace Lisere.Infrastructure.Migrations
                     b.Property<Guid>("RequestId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("RequestedSizes")
+                    b.Property<string>("Size")
                         .IsRequired()
-                        .HasColumnType("nvarchar(200)");
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -398,6 +456,17 @@ namespace Lisere.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Lisere.Domain.Entities.AlternativeRequestLine", b =>
+                {
+                    b.HasOne("Lisere.Domain.Entities.Request", "Request")
+                        .WithMany("AlternativeLines")
+                        .HasForeignKey("RequestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Request");
+                });
+
             modelBuilder.Entity("Lisere.Domain.Entities.Request", b =>
                 {
                     b.HasOne("Lisere.Domain.Entities.User", "Seller")
@@ -480,6 +549,8 @@ namespace Lisere.Infrastructure.Migrations
 
             modelBuilder.Entity("Lisere.Domain.Entities.Request", b =>
                 {
+                    b.Navigation("AlternativeLines");
+
                     b.Navigation("Lines");
                 });
 #pragma warning restore 612, 618

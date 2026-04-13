@@ -20,8 +20,8 @@ public class CreateRequestLineDto
     public string ArticleBarcode { get; set; } = string.Empty;
 
     [Required]
-    [MinLength(1)]
-    public List<string> RequestedSizes { get; set; } = new();
+    [MaxLength(10)]
+    public string Size { get; set; } = string.Empty;
 
     [Range(1, 100)]
     public int Quantity { get; set; } = 1;

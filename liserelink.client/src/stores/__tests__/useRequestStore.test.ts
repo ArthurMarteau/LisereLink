@@ -14,12 +14,16 @@ function makeRequest(overrides: Partial<RequestDto> = {}): RequestDto {
   return {
     id: crypto.randomUUID(),
     sellerId: 'seller-1',
+    sellerFirstName: 'Alice',
+    sellerLastName: 'Dupont',
+    storeId: '002',
     zone: ZoneType.RTW,
     status: RequestStatus.Pending,
     lines: [],
+    alternativeLines: [],
     createdAt: new Date().toISOString(),
     ...overrides,
-  };
+  } as RequestDto;
 }
 
 beforeEach(() => {

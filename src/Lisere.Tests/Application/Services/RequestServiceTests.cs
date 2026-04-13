@@ -40,7 +40,7 @@ public class RequestServiceTests
         var articleId = Guid.NewGuid();
         var dto = BuildCreateRequestDto(articleId, "M");
 
-        _stockService.IsAvailableAsync(articleId, "M", Arg.Any<CancellationToken>())
+        _stockService.IsAvailableAsync(articleId, "M", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(true);
 
         var result = await _sut.CreateAsync(dto);
@@ -56,7 +56,7 @@ public class RequestServiceTests
         var articleId = Guid.NewGuid();
         var dto = BuildCreateRequestDto(articleId, "M");
 
-        _stockService.IsAvailableAsync(articleId, "M", Arg.Any<CancellationToken>())
+        _stockService.IsAvailableAsync(articleId, "M", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(true);
 
         await _sut.CreateAsync(dto);
@@ -76,7 +76,7 @@ public class RequestServiceTests
         var articleId = Guid.NewGuid();
         var dto = BuildCreateRequestDto(articleId, "M");
 
-        _stockService.IsAvailableAsync(articleId, "M", Arg.Any<CancellationToken>())
+        _stockService.IsAvailableAsync(articleId, "M", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(false);
 
         await Assert.ThrowsAsync<BusinessException>(() => _sut.CreateAsync(dto));
@@ -95,7 +95,7 @@ public class RequestServiceTests
             BuildRequest(RequestStatus.Pending),
             BuildRequest(RequestStatus.InProgress),
         };
-        _repository.GetAllAsync(1, 20, Arg.Any<CancellationToken>())
+        _repository.GetAllAsync(1, 20, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns((requests.AsEnumerable(), 2));
 
         var result = await _sut.GetAllAsync(1, 20);
@@ -109,23 +109,23 @@ public class RequestServiceTests
     [Fact]
     public async Task GetAllAsync_CapsPageSizeAt50()
     {
-        _repository.GetAllAsync(1, 50, Arg.Any<CancellationToken>())
+        _repository.GetAllAsync(1, 50, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns((Enumerable.Empty<Request>(), 0));
 
         await _sut.GetAllAsync(1, 999);
 
-        await _repository.Received(1).GetAllAsync(1, 50, Arg.Any<CancellationToken>());
+        await _repository.Received(1).GetAllAsync(1, 50, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task GetAllAsync_WithPageSizeBelowMax_PreservesOriginalPageSize()
     {
-        _repository.GetAllAsync(1, 20, Arg.Any<CancellationToken>())
+        _repository.GetAllAsync(1, 20, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns((Enumerable.Empty<Request>(), 0));
 
         await _sut.GetAllAsync(1, 20);
 
-        await _repository.Received(1).GetAllAsync(1, 20, Arg.Any<CancellationToken>());
+        await _repository.Received(1).GetAllAsync(1, 20, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     // -------------------------------------------------------------------------
@@ -181,7 +181,7 @@ public class RequestServiceTests
         _repository.GetByIdAsync(request.Id, Arg.Any<CancellationToken>())
             .Returns(request);
 
-        var dto = new UpdateRequestDto { Status = RequestStatus.Delivered };
+        var dto = new UpdateRequestDto { Status = RequestStatus.Processed };
 
         await Assert.ThrowsAsync<BusinessException>(() => _sut.UpdateAsync(request.Id, dto));
         await _repository.DidNotReceive().UpdateAsync(Arg.Any<Request>(), Arg.Any<CancellationToken>());
@@ -209,7 +209,7 @@ public class RequestServiceTests
     public async Task GetByIdAsync_WhenNotFound_ReturnsNull()
     {
         _repository.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
-            .Returns((Domain.Entities.Request?)null);
+            .Returns((Request?)null);
 
         var result = await _sut.GetByIdAsync(Guid.NewGuid());
 
@@ -226,7 +226,7 @@ public class RequestServiceTests
         var articleId = Guid.NewGuid();
         var dto = BuildCreateRequestDto(articleId, "M");
 
-        _stockService.IsAvailableAsync(articleId, "M", Arg.Any<CancellationToken>())
+        _stockService.IsAvailableAsync(articleId, "M", Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(true);
         _notificationService
             .NotifyNewRequestAsync(Arg.Any<RequestDto>())
@@ -272,13 +272,33 @@ public class RequestServiceTests
         Assert.Null(exception);
     }
 
+    [Fact]
+    public async Task CreateAsync_PassesDtoStoreIdToStockService()
+    {
+        var articleId = Guid.NewGuid();
+        const string storeId = "002";
+        var dto = BuildCreateRequestDto(articleId, "M", storeId);
+
+        _stockService.IsAvailableAsync(articleId, "M", Arg.Is<string>(s => s == storeId), Arg.Any<CancellationToken>())
+            .Returns(true);
+
+        await _sut.CreateAsync(dto);
+
+        await _stockService.Received(1).IsAvailableAsync(
+            articleId,
+            "M",
+            Arg.Is<string>(s => s == storeId),
+            Arg.Any<CancellationToken>());
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
-    private static CreateRequestDto BuildCreateRequestDto(Guid articleId, string size) => new()
+    private static CreateRequestDto BuildCreateRequestDto(Guid articleId, string size, string storeId = "001") => new()
     {
         SellerId = Guid.NewGuid(),
+        StoreId = storeId,
         Zone = ZoneType.RTW,
         Lines =
         [
@@ -288,7 +308,7 @@ public class RequestServiceTests
                 ArticleName         = "Manteau Test",
                 ArticleColorOrPrint = "Noir",
                 ArticleBarcode      = "1234567890123",
-                RequestedSizes      = [size],
+                Size                = size,
                 Quantity            = 1,
             }
         ]

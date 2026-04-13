@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { ShoppingBag, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { useCartStore } from '@/stores/useCartStore';
 import { startConnection, stopConnection } from '@/services/signalRClient';
 import SignalRBadge from '@/components/ui/SignalRBadge';
 import ZoneChip from '@/components/ui/ZoneChip';
@@ -13,8 +15,10 @@ const NAV_ITEMS = [
 ] as const;
 
 export default function SellerLayout() {
+  const navigate = useNavigate();
   const selectedStoreName = useAuthStore((s) => s.selectedStoreName);
   const selectedZone = useAuthStore((s) => s.selectedZone);
+  const cartCount = useCartStore((s) => s.lines.length);
   const [isModalOpen, setIsModalOpen] = useState(selectedZone === null);
 
   useEffect(() => {
@@ -34,6 +38,27 @@ export default function SellerLayout() {
         <div className="flex items-center gap-3 shrink-0">
           <ZoneChip onClick={() => setIsModalOpen(true)} />
           <SignalRBadge />
+          <button
+            type="button"
+            onClick={() => navigate('/cart')}
+            className="relative min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Panier"
+          >
+            <ShoppingBag size={18} className="text-white" />
+            {cartCount > 0 && (
+              <span className="absolute top-1 right-1 bg-[#e51940] text-white font-[Oswald] text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => { useAuthStore.getState().logout(); navigate('/login'); }}
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Déconnexion"
+          >
+            <LogOut size={18} className="text-white" />
+          </button>
         </div>
       </header>
 

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Lisere.Application.Common;
 using Lisere.Application.DTOs;
 using Lisere.Application.Interfaces;
@@ -6,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
 namespace Lisere.API.Controllers;
+
+public record TakeRequestDto([Required] Guid StockistId);
 
 [ApiController]
 [Route("api/[controller]")]
@@ -84,29 +87,73 @@ public class RequestsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Le vendeur accepte l'alternative proposée par le stockiste.</summary>
-    [HttpPost("{id:guid}/accept-alternative")]
+    /// <summary>Le stockiste prend la demande en charge (Pending → InProgress).</summary>
+    [HttpPost("{id:guid}/take")]
     [ProducesResponseType(typeof(RequestDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<RequestDto>> AcceptAlternative(
+    public async Task<ActionResult<RequestDto>> Take(
         Guid id,
+        [FromBody] TakeRequestDto dto,
         CancellationToken cancellationToken = default)
     {
-        var request = await _requestService.AcceptAlternativeAsync(id, cancellationToken);
+        var request = await _requestService.TakeInProgressAsync(id, dto.StockistId, cancellationToken);
         return Ok(request);
     }
 
-    /// <summary>Le vendeur refuse l'alternative proposée par le stockiste.</summary>
-    [HttpPost("{id:guid}/reject-alternative")]
+    /// <summary>Le stockiste marque une ligne comme trouvée.</summary>
+    [HttpPost("{id:guid}/lines/{lineId:guid}/found")]
     [ProducesResponseType(typeof(RequestDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<RequestDto>> RejectAlternative(
+    public async Task<ActionResult<RequestDto>> MarkLineFound(
         Guid id,
+        Guid lineId,
         CancellationToken cancellationToken = default)
     {
-        var request = await _requestService.RejectAlternativeAsync(id, cancellationToken);
+        var request = await _requestService.MarkLineFoundAsync(id, lineId, cancellationToken);
+        return Ok(request);
+    }
+
+    /// <summary>Le stockiste marque une ligne comme non trouvée.</summary>
+    [HttpPost("{id:guid}/lines/{lineId:guid}/not-found")]
+    [ProducesResponseType(typeof(RequestDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<RequestDto>> MarkLineNotFound(
+        Guid id,
+        Guid lineId,
+        CancellationToken cancellationToken = default)
+    {
+        var request = await _requestService.MarkLineNotFoundAsync(id, lineId, cancellationToken);
+        return Ok(request);
+    }
+
+    /// <summary>Le stockiste propose des alternatives au vendeur.</summary>
+    [HttpPost("{id:guid}/propose-alternatives")]
+    [ProducesResponseType(typeof(RequestDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<RequestDto>> ProposeAlternatives(
+        Guid id,
+        [FromBody] ProposeAlternativesDto dto,
+        CancellationToken cancellationToken = default)
+    {
+        var request = await _requestService.ProposeAlternativesAsync(id, dto, cancellationToken);
+        return Ok(request);
+    }
+
+    /// <summary>Le vendeur accepte ou refuse les alternatives proposées.</summary>
+    [HttpPost("{id:guid}/respond-alternatives")]
+    [ProducesResponseType(typeof(RequestDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<RequestDto>> RespondToAlternatives(
+        Guid id,
+        [FromBody] RespondToAlternativesDto dto,
+        CancellationToken cancellationToken = default)
+    {
+        var request = await _requestService.RespondToAlternativesAsync(id, dto, cancellationToken);
         return Ok(request);
     }
 }

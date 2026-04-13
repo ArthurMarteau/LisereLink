@@ -123,7 +123,7 @@ public class ExternalStockApiClientTests
 
         var sut = BuildSut(new StaticResponseHandler(HttpStatusCode.OK, json));
 
-        var result = (await sut.GetStockAsync(articleId, storeId)).ToList();
+        var result = (await sut.GetStockAsync(articleId, storeId.ToString())).ToList();
 
         Assert.Single(result);
         Assert.Equal("M", result[0].Size);
@@ -135,7 +135,7 @@ public class ExternalStockApiClientTests
     {
         var sut = BuildSut(new ThrowingHandler());
 
-        var result = await sut.GetStockAsync(Guid.NewGuid(), Guid.NewGuid());
+        var result = await sut.GetStockAsync(Guid.NewGuid(), "002");
 
         Assert.Empty(result);
     }

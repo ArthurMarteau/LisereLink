@@ -101,7 +101,7 @@ public class RequestsControllerTests : IntegrationTestBase
                     ArticleName         = "Manteau",
                     ArticleColorOrPrint = "Noir",
                     ArticleBarcode      = "1234567890123",
-                    RequestedSizes      = ["M"],
+                    Size                = "M",
                     Quantity            = 1,
                 }
             ]
@@ -131,7 +131,7 @@ public class RequestsControllerTests : IntegrationTestBase
                     ArticleName         = "Manteau",
                     ArticleColorOrPrint = "Noir",
                     ArticleBarcode      = "1234567890123",
-                    RequestedSizes      = ["M"],
+                    Size                = "M",
                     Quantity            = 1,
                 }
             ]
@@ -179,10 +179,12 @@ file sealed class StockAvailableFactory : LisereWebApplicationFactory
             mock.IsAvailableAsync(
                     Arg.Any<Guid>(),
                     Arg.Any<string>(),
+                    Arg.Any<string>(),
                     Arg.Any<CancellationToken>())
                 .Returns(true);
             mock.GetAvailabilityAsync(
                     Arg.Any<Guid>(),
+                    Arg.Any<string>(),
                     Arg.Any<string>(),
                     Arg.Any<CancellationToken>())
                 .Returns(5);

@@ -8,15 +8,21 @@ public static class RequestMappingExtensions
 {
     public static RequestDto ToDto(this Request request) => new()
     {
-        Id          = request.Id,
-        SellerId    = request.SellerId,
-        StockistId  = request.StockistId,
-        StoreId     = request.StoreId,
+        Id                 = request.Id,
+        SellerId           = request.SellerId,
+        SellerFirstName    = request.Seller?.FirstName ?? string.Empty,
+        SellerLastName     = request.Seller?.LastName ?? string.Empty,
+        StockistId         = request.StockistId,
+        StockistFirstName  = request.Stockist?.FirstName,
+        StockistLastName   = request.Stockist?.LastName,
+        StoreId            = request.StoreId,
         Zone        = request.Zone.ToString(),
         Status      = request.Status.ToString(),
         CreatedAt   = request.CreatedAt,
         CompletedAt = request.CompletedAt,
-        Lines       = request.Lines.Select(l => l.ToDto()).ToList(),
+        CancelledAt = request.CancelledAt,
+        Lines            = request.Lines.Select(l => l.ToDto()).ToList(),
+        AlternativeLines = request.AlternativeLines.Select(a => a.ToDto()).ToList(),
     };
 
     public static Request ToEntity(this CreateRequestDto dto) => new()

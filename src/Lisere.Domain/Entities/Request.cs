@@ -16,8 +16,12 @@ public class Request : BaseEntity
 
     public DateTime? CompletedAt { get; set; }
 
+    public DateTime? CancelledAt { get; set; }
+
     // Navigation properties
     public List<RequestLine> Lines { get; set; } = new();
+
+    public List<AlternativeRequestLine> AlternativeLines { get; set; } = new();
 
     public User Seller { get; set; } = null!;
 

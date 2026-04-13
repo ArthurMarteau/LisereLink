@@ -20,7 +20,13 @@ public interface IRequestService
 
     Task CancelAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<RequestDto> AcceptAlternativeAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<RequestDto> TakeInProgressAsync(Guid requestId, Guid stockistId, CancellationToken cancellationToken = default);
 
-    Task<RequestDto> RejectAlternativeAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<RequestDto> MarkLineFoundAsync(Guid requestId, Guid lineId, CancellationToken cancellationToken = default);
+
+    Task<RequestDto> MarkLineNotFoundAsync(Guid requestId, Guid lineId, CancellationToken cancellationToken = default);
+
+    Task<RequestDto> ProposeAlternativesAsync(Guid requestId, ProposeAlternativesDto dto, CancellationToken cancellationToken = default);
+
+    Task<RequestDto> RespondToAlternativesAsync(Guid requestId, RespondToAlternativesDto dto, CancellationToken cancellationToken = default);
 }

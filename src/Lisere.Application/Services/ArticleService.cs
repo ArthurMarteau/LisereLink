@@ -30,4 +30,9 @@ public class ArticleService : IArticleService
     {
         return _stockApiClient.GetArticleByBarcodeAsync(barcode, cancellationToken);
     }
+
+    public Task<ArticleDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return _stockApiClient.GetArticleByIdAsync(id, cancellationToken);
+    }
 }

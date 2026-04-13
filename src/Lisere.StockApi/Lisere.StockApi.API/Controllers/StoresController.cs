@@ -1,5 +1,5 @@
 using Lisere.StockApi.Application.DTOs;
-using Lisere.StockApi.Domain.Interfaces;
+using Lisere.StockApi.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -10,27 +10,18 @@ namespace Lisere.StockApi.API.Controllers;
 [EnableRateLimiting("fixed")]
 public class StoresController : ControllerBase
 {
-    private readonly IStoreRepository _storeRepository;
+    private readonly IStoreService _storeService;
 
-    public StoresController(IStoreRepository storeRepository)
+    public StoresController(IStoreService storeService)
     {
-        _storeRepository = storeRepository;
+        _storeService = storeService;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<StoreDto>>> GetAll(
         CancellationToken cancellationToken = default)
     {
-        var stores = await _storeRepository.GetAllAsync(cancellationToken);
-
-        var dtos = stores.Select(s => new StoreDto
-        {
-            Id = s.Id,
-            Name = s.Name,
-            Code = s.Code,
-            Type = s.Type,
-        });
-
+        var dtos = await _storeService.GetAllAsync(cancellationToken);
         return Ok(dtos);
     }
 }

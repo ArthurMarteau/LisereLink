@@ -14,17 +14,11 @@ public class RequestLine : BaseEntity
 
     public string ArticleBarcode { get; set; } = string.Empty;
 
-    public List<string> RequestedSizes { get; set; } = new();
+    public string Size { get; set; } = string.Empty;
 
     public int Quantity { get; set; }
 
     public RequestLineStatus Status { get; set; }
-
-    // Alternative proposal fields
-    public Guid? AlternativeArticleId { get; set; }
-    public string? AlternativeColorOrPrint { get; set; }
-    public List<string>? AlternativeSizes { get; set; }
-    public bool AlternativeStockOverride { get; set; }
 
     // Navigation properties
     public Request Request { get; set; } = null!;

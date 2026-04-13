@@ -13,4 +13,6 @@ public interface IArticleService
         CancellationToken cancellationToken = default);
 
     Task<ArticleDto?> GetByBarcodeAsync(string barcode, CancellationToken cancellationToken = default);
+
+    Task<ArticleDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 }

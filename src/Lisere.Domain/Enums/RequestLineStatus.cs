@@ -5,5 +5,6 @@ public enum RequestLineStatus
     Pending,
     Found,
     NotFound,
-    AlternativeProposed
+    AlternativeProposed,
+    AlternativeDenied
 }
