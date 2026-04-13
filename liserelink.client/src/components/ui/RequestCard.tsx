@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Temporal } from '@js-temporal/polyfill';
 import { RequestLineStatus, RequestStatus } from '@/constants/enums';
 import type { RequestDto } from '@/types';
 import StatusBadge from './StatusBadge';
@@ -31,8 +32,12 @@ function borderColor(status: RequestStatus): string {
 }
 
 function timeAgo(dateStr: string): string {
-  const diffMs = Date.now() - new Date(dateStr).getTime();
-  const diffMin = Math.floor(diffMs / 60000);
+  const past = Temporal.Instant.from(
+    dateStr.endsWith('Z') ? dateStr : dateStr + 'Z'
+  );
+  const now = Temporal.Now.instant();
+  const diffSeconds = Math.floor((now.epochMilliseconds - past.epochMilliseconds) / 1000);
+  const diffMin = Math.floor(diffSeconds / 60);
   if (diffMin < 1) return "IL Y A MOINS D'1 MIN";
   if (diffMin < 60) return `IL Y A ${String(diffMin)} MIN`;
   const diffH = Math.floor(diffMin / 60);

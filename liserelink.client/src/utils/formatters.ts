@@ -1,3 +1,4 @@
+import { Temporal } from '@js-temporal/polyfill';
 import {
   ClothingFamily,
   RequestLineStatus,
@@ -7,14 +8,12 @@ import {
 } from '../constants/enums';
 
 export function formatDate(date: string): string {
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'Europe/Paris',
-  }).format(new Date(date));
+  const instant = Temporal.Instant.from(
+    date.endsWith('Z') ? date : date + 'Z'
+  );
+  const zdt = instant.toZonedDateTimeISO('Europe/Paris');
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(zdt.day)}/${pad(zdt.month)}/${zdt.year} ${pad(zdt.hour)}:${pad(zdt.minute)}`;
 }
 
 const SIZE_LABELS: Record<Size, string> = {

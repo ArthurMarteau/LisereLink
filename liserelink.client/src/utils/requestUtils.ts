@@ -1,3 +1,4 @@
+import { Temporal } from '@js-temporal/polyfill';
 import { RequestStatus } from '@/constants/enums';
 import type { RequestDto } from '@/types';
 
@@ -12,13 +13,13 @@ export function isCompletedToday(request: RequestDto): boolean {
 
   if (!dateStr) return false;
 
-  const d = new Date(dateStr);
-  const now = new Date();
-  const fmt = new Intl.DateTimeFormat('fr-FR', {
-    timeZone: 'Europe/Paris',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  return fmt.format(d) === fmt.format(now);
+  const instant = Temporal.Instant.from(
+    dateStr.endsWith('Z') ? dateStr : dateStr + 'Z'
+  );
+  const requestDate = instant
+    .toZonedDateTimeISO('Europe/Paris')
+    .toPlainDate();
+  const today = Temporal.Now.plainDateISO('Europe/Paris');
+
+  return Temporal.PlainDate.compare(requestDate, today) === 0;
 }
