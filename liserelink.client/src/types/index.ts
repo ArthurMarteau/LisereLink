@@ -39,6 +39,19 @@ export interface StoreDto {
   code: string;
 }
 
+export interface AlternativeRequestLineDto {
+  id: string;
+  requestId: string;
+  articleId: string;
+  articleName: string;
+  articleColorOrPrint: string;
+  articleBarcode: string;
+  requestedSizes: Size[];
+  quantity: number;
+  status: RequestLineStatus;
+  stockOverride: boolean;
+}
+
 export interface RequestLineDto {
   id: string;
   requestId: string;
@@ -67,8 +80,10 @@ export interface RequestDto {
   zone: ZoneType;
   status: RequestStatus;
   lines: RequestLineDto[];
+  alternativeLines: AlternativeRequestLineDto[];
   createdAt: string;
   completedAt?: string;
+  cancelledAt?: string;
 }
 
 export interface AuthUserDto {

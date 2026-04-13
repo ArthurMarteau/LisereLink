@@ -30,4 +30,13 @@ public class NotificationService : INotificationService
         var group = $"user-{sellerId}";
         await _hubContext.Clients.Group(group).SendAsync("RequestCancelled", requestId);
     }
+
+    public async Task NotifyStockistRequestUpdatedAsync(RequestDto request)
+    {
+        if (request.StockistId is null)
+            return;
+
+        var group = $"user-{request.StockistId}";
+        await _hubContext.Clients.Group(group).SendAsync("RequestUpdated", request);
+    }
 }

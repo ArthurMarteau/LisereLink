@@ -2,7 +2,7 @@ using Lisere.Domain.Enums;
 
 namespace Lisere.Domain.Entities;
 
-public class RequestLine : BaseEntity
+public class AlternativeRequestLine : BaseEntity
 {
     public Guid RequestId { get; set; }
 
@@ -18,7 +18,9 @@ public class RequestLine : BaseEntity
 
     public int Quantity { get; set; }
 
-    public RequestLineStatus Status { get; set; }
+    public RequestLineStatus Status { get; set; } // AlternativeProposed | AlternativeDenied | Found
+
+    public bool StockOverride { get; set; }
 
     // Navigation properties
     public Request Request { get; set; } = null!;

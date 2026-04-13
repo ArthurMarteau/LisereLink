@@ -28,5 +28,9 @@ public class RequestDto
 
     public DateTime? CompletedAt { get; set; }
 
+    public DateTime? CancelledAt { get; set; }
+
     public List<RequestLineDto> Lines { get; set; } = new();
+
+    public List<AlternativeRequestLineDto> AlternativeLines { get; set; } = new();
 }

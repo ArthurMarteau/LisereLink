@@ -17,7 +17,9 @@
       "Bash(npm run:*)",
       "Bash(npx tsc:*)",
       "Bash(echo \"EXIT:$?\")",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(xargs ls:*)",
+      "Bash(npx vitest:*)"
     ]
   }
 }

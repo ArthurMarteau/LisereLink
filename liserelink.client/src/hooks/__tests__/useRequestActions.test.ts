@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { toast } from 'sonner';
 import apiClient from '@/services/apiClient';
@@ -42,10 +43,13 @@ const mockUser = {
 const mockRequest: RequestDto = {
   id: 'req-1',
   sellerId: 'seller-1',
+  sellerFirstName: 'Alice',
+  sellerLastName: 'Dupont',
   storeId: '002',
   zone: ZoneType.RTW,
   status: RequestStatus.Pending,
   lines: [],
+  alternativeLines: [],
   createdAt: new Date().toISOString(),
 };
 
@@ -67,7 +71,7 @@ beforeEach(() => {
 
 describe('useRequestActions', () => {
   describe('cancelRequest', () => {
-    it('calls DELETE /api/requests/{id} and removes from store on success', async () => {
+    it('calls DELETE /api/requests/{id} and sets status Cancelled in store on success', async () => {
       useRequestStore.setState({ requests: [mockRequest] });
       vi.mocked(apiClient.delete).mockResolvedValueOnce({});
       const { result } = renderHook(() => useRequestActions());
@@ -77,7 +81,9 @@ describe('useRequestActions', () => {
       });
 
       expect(apiClient.delete).toHaveBeenCalledWith(`/requests/${mockRequest.id}`);
-      expect(useRequestStore.getState().requests).not.toContainEqual(mockRequest);
+      const stored = useRequestStore.getState().requests[0];
+      expect(stored.status).toBe(RequestStatus.Cancelled);
+      expect(stored.cancelledAt).toBeDefined();
     });
 
     it('shows sonner error toast if request is not Pending (business error)', async () => {
@@ -228,23 +234,26 @@ describe('useRequestActions', () => {
     });
   });
 
-  describe('acceptAlternative', () => {
-    it('calls POST /api/requests/{id}/accept-alternative', async () => {
+  describe('respondToAlternatives', () => {
+    it('calls POST /requests/{id}/respond-alternatives with responses payload', async () => {
       vi.mocked(apiClient.post).mockResolvedValueOnce({
         data: { ...mockRequest, status: RequestStatus.InProgress },
       });
       const { result } = renderHook(() => useRequestActions());
 
       await act(async () => {
-        await result.current.acceptAlternative(mockRequest.id);
+        await result.current.respondToAlternatives(mockRequest.id, [
+          { alternativeLineId: 'alt-1', accepted: true },
+        ]);
       });
 
       expect(apiClient.post).toHaveBeenCalledWith(
-        `/requests/${mockRequest.id}/accept-alternative`,
+        `/requests/${mockRequest.id}/respond-alternatives`,
+        { responses: [{ alternativeLineId: 'alt-1', accepted: true }] },
       );
     });
 
-    it('updates request status to InProgress in store', async () => {
+    it('updates request in store after accept', async () => {
       const awaiting: RequestDto = {
         ...mockRequest,
         status: RequestStatus.AwaitingSellerResponse,
@@ -255,43 +264,15 @@ describe('useRequestActions', () => {
       const { result } = renderHook(() => useRequestActions());
 
       await act(async () => {
-        await result.current.acceptAlternative(mockRequest.id);
+        await result.current.respondToAlternatives(mockRequest.id, [
+          { alternativeLineId: 'alt-1', accepted: true },
+        ]);
       });
 
       expect(useRequestStore.getState().requests[0].status).toBe(RequestStatus.InProgress);
     });
 
-    it('shows success toast', async () => {
-      vi.mocked(apiClient.post).mockResolvedValueOnce({
-        data: { ...mockRequest, status: RequestStatus.InProgress },
-      });
-      const { result } = renderHook(() => useRequestActions());
-
-      await act(async () => {
-        await result.current.acceptAlternative(mockRequest.id);
-      });
-
-      expect(toast.success).toHaveBeenCalled();
-    });
-  });
-
-  describe('rejectAlternative', () => {
-    it('calls POST /api/requests/{id}/reject-alternative', async () => {
-      vi.mocked(apiClient.post).mockResolvedValueOnce({
-        data: { ...mockRequest, status: RequestStatus.Unavailable },
-      });
-      const { result } = renderHook(() => useRequestActions());
-
-      await act(async () => {
-        await result.current.rejectAlternative(mockRequest.id);
-      });
-
-      expect(apiClient.post).toHaveBeenCalledWith(
-        `/requests/${mockRequest.id}/reject-alternative`,
-      );
-    });
-
-    it('updates request status to Unavailable in store', async () => {
+    it('updates request in store after reject', async () => {
       const awaiting: RequestDto = {
         ...mockRequest,
         status: RequestStatus.AwaitingSellerResponse,
@@ -302,20 +283,22 @@ describe('useRequestActions', () => {
       const { result } = renderHook(() => useRequestActions());
 
       await act(async () => {
-        await result.current.rejectAlternative(mockRequest.id);
+        await result.current.respondToAlternatives(mockRequest.id, [
+          { alternativeLineId: 'alt-1', accepted: false },
+        ]);
       });
 
       expect(useRequestStore.getState().requests[0].status).toBe(RequestStatus.Unavailable);
     });
 
-    it('shows error toast with reason', async () => {
-      vi.mocked(apiClient.post).mockResolvedValueOnce({
-        data: { ...mockRequest, status: RequestStatus.Unavailable },
-      });
+    it('shows error toast on network failure', async () => {
+      vi.mocked(apiClient.post).mockRejectedValueOnce(new Error('Erreur réseau'));
       const { result } = renderHook(() => useRequestActions());
 
       await act(async () => {
-        await result.current.rejectAlternative(mockRequest.id);
+        await result.current.respondToAlternatives(mockRequest.id, [
+          { alternativeLineId: 'alt-1', accepted: true },
+        ]);
       });
 
       expect(toast.error).toHaveBeenCalled();

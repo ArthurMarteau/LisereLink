@@ -20,7 +20,9 @@ public static class RequestMappingExtensions
         Status      = request.Status.ToString(),
         CreatedAt   = request.CreatedAt,
         CompletedAt = request.CompletedAt,
-        Lines       = request.Lines.Select(l => l.ToDto()).ToList(),
+        CancelledAt = request.CancelledAt,
+        Lines            = request.Lines.Select(l => l.ToDto()).ToList(),
+        AlternativeLines = request.AlternativeLines.Select(a => a.ToDto()).ToList(),
     };
 
     public static Request ToEntity(this CreateRequestDto dto) => new()

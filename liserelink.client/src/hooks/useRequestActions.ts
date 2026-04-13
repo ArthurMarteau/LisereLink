@@ -11,6 +11,11 @@ interface UpdateRequestPayload {
   stockistId?: string;
 }
 
+interface AlternativeResponse {
+  alternativeLineId: string;
+  accepted: boolean;
+}
+
 function isProblemDetails(error: unknown): error is ProblemDetails {
   return (
     error !== null &&
@@ -21,8 +26,7 @@ function isProblemDetails(error: unknown): error is ProblemDetails {
 }
 
 export function useRequestActions() {
-  const { addRequest, removeRequest, updateRequest: storeUpdate, setLoading, setRequests } =
-    useRequestStore();
+  const { updateRequest: storeUpdate, setLoading, setRequests } = useRequestStore();
 
   // ── cancelRequest ──────────────────────────────────────────────────────────
 
@@ -37,7 +41,10 @@ export function useRequestActions() {
 
       try {
         await apiClient.delete(`/requests/${id}`);
-        removeRequest(id);
+        storeUpdate(id, {
+          status: RequestStatus.Cancelled,
+          cancelledAt: new Date().toISOString(),
+        });
       } catch (error) {
         const message = isProblemDetails(error)
           ? error.detail
@@ -45,7 +52,7 @@ export function useRequestActions() {
         toast.error(message);
       }
     },
-    [removeRequest],
+    [storeUpdate],
   );
 
   // ── updateRequest ──────────────────────────────────────────────────────────
@@ -98,40 +105,20 @@ export function useRequestActions() {
     }
   }, [setLoading, setRequests]);
 
-  // ── acceptAlternative ──────────────────────────────────────────────────────
+  // ── respondToAlternatives ──────────────────────────────────────────────────
 
-  const acceptAlternative = useCallback(
-    async (id: string): Promise<void> => {
+  const respondToAlternatives = useCallback(
+    async (requestId: string, responses: AlternativeResponse[]): Promise<void> => {
       try {
         const response = await apiClient.post<RequestDto>(
-          `/requests/${id}/accept-alternative`,
+          `/requests/${requestId}/respond-alternatives`,
+          { responses },
         );
-        storeUpdate(id, response.data);
-        toast.success('Alternative acceptée.');
+        storeUpdate(requestId, response.data);
       } catch (error) {
         const message = isProblemDetails(error)
           ? error.detail
-          : "Impossible d'accepter l'alternative.";
-        toast.error(message);
-      }
-    },
-    [storeUpdate],
-  );
-
-  // ── rejectAlternative ──────────────────────────────────────────────────────
-
-  const rejectAlternative = useCallback(
-    async (id: string): Promise<void> => {
-      try {
-        const response = await apiClient.post<RequestDto>(
-          `/requests/${id}/reject-alternative`,
-        );
-        storeUpdate(id, response.data);
-        toast.error('Alternative refusée. La demande est marquée indisponible.');
-      } catch (error) {
-        const message = isProblemDetails(error)
-          ? error.detail
-          : "Impossible de refuser l'alternative.";
+          : 'Impossible de répondre aux alternatives.';
         toast.error(message);
       }
     },
@@ -142,7 +129,6 @@ export function useRequestActions() {
     cancelRequest,
     updateRequest,
     fetchRequests,
-    acceptAlternative,
-    rejectAlternative,
+    respondToAlternatives,
   };
 }

@@ -1,9 +1,9 @@
-using Lisere.Domain.Enums;
+namespace Lisere.Application.DTOs;
 
-namespace Lisere.Domain.Entities;
-
-public class RequestLine : BaseEntity
+public class AlternativeRequestLineDto
 {
+    public Guid Id { get; set; }
+
     public Guid RequestId { get; set; }
 
     public Guid ArticleId { get; set; }
@@ -18,8 +18,8 @@ public class RequestLine : BaseEntity
 
     public int Quantity { get; set; }
 
-    public RequestLineStatus Status { get; set; }
+    /// <summary>RequestLineStatus converti en string.</summary>
+    public string Status { get; set; } = string.Empty;
 
-    // Navigation properties
-    public Request Request { get; set; } = null!;
+    public bool StockOverride { get; set; }
 }

@@ -3,12 +3,16 @@ import { RequestLineStatus, RequestStatus } from '@/constants/enums';
 import type { RequestDto } from '@/types';
 import StatusBadge from './StatusBadge';
 
+interface AlternativeResponsePayload {
+  alternativeLineId: string;
+  accepted: boolean;
+}
+
 interface RequestCardProps {
   request: RequestDto;
   onCancel?: () => void;
   onModify?: () => void;
-  onAcceptAlternative?: () => void;
-  onRejectAlternative?: () => void;
+  onRespondAlternative?: (response: AlternativeResponsePayload) => void;
 }
 
 function borderColor(status: RequestStatus): string {
@@ -39,14 +43,11 @@ export default function RequestCard({
   request,
   onCancel,
   onModify,
-  onAcceptAlternative,
-  onRejectAlternative,
+  onRespondAlternative,
 }: RequestCardProps) {
   const [confirmCancel, setConfirmCancel] = useState(false);
 
-  const hasAlternative = request.lines.some(
-    (l) => l.status === RequestLineStatus.AlternativeProposed,
-  );
+  const showAlternatives = request.alternativeLines.length > 0;
 
   return (
     <div className={`bg-white px-4 py-4 ${borderColor(request.status)}`}>
@@ -58,7 +59,7 @@ export default function RequestCard({
         </span>
       </div>
 
-      {/* Lines */}
+      {/* Original lines */}
       {request.lines.map((line, i) => (
         <div key={line.id ?? i} className="mb-2">
           <p className="font-['Libre_Baskerville'] text-[14px] text-[#121212] leading-snug">
@@ -83,39 +84,77 @@ export default function RequestCard({
         </p>
       )}
 
-      {/* Alternative proposed section */}
-      {hasAlternative && (
+      {/* Alternative lines */}
+      {showAlternatives && (
         <div className="mt-3 pt-3 border-t border-[#e1e1e1]">
-          <p className="font-[Oswald] text-[10px] tracking-[2px] uppercase text-[#b28a2c] mb-2">
-            Alternative proposée
+          <p className="font-[Oswald] text-[10px] tracking-[2px] uppercase text-[#b28a2c] mb-3">
+            Alternatives proposées
           </p>
-          {request.lines
-            .filter((l) => l.status === RequestLineStatus.AlternativeProposed)
-            .map((line, i) => (
-              <div key={`alt-${line.id ?? i}`} className="mb-1">
-                {line.alternativeColorOrPrint && (
-                  <p className="font-['Libre_Baskerville'] text-[13px] text-[#121212]">
-                    {line.alternativeColorOrPrint}
-                  </p>
-                )}
-                {line.alternativeSizes && line.alternativeSizes.length > 0 && (
-                  <p className="font-[Oswald] text-[11px] tracking-[1.5px] uppercase text-[#969696]">
-                    {line.alternativeSizes.join(' · ')}
-                  </p>
-                )}
-              </div>
-            ))}
+
+          {request.alternativeLines.map((alt) => (
+            <div key={alt.id} className="border-2 border-[#e51940] px-3 py-3 mb-3">
+              <p className="font-[Oswald] text-[9px] tracking-[2px] uppercase text-[#b28a2c] mb-1">
+                Alternative
+              </p>
+
+              <p className="font-['Libre_Baskerville'] text-[13px] text-[#121212]">
+                {alt.articleName}
+              </p>
+              <p className="font-[Oswald] text-[11px] tracking-[1.5px] uppercase text-[#969696] mt-0.5">
+                {alt.articleColorOrPrint}
+              </p>
+              <p className="font-[Oswald] text-[11px] tracking-[1.5px] uppercase text-[#969696] mt-0.5">
+                {alt.requestedSizes.join(' · ')}
+              </p>
+
+              {alt.stockOverride && (
+                <p className="font-[Oswald] text-[9px] tracking-[1.5px] uppercase text-[#e51940] mt-1">
+                  ⚠ Article hors stock
+                </p>
+              )}
+
+              {alt.status === RequestLineStatus.AlternativeProposed && onRespondAlternative && (
+                <div className="flex gap-2 mt-3">
+                  <button
+                    type="button"
+                    onClick={() => onRespondAlternative({ alternativeLineId: alt.id, accepted: true })}
+                    className="flex-1 py-2 bg-[#121212] font-[Oswald] text-[11px] tracking-[2px] uppercase text-white min-h-11"
+                  >
+                    Accepter
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onRespondAlternative({ alternativeLineId: alt.id, accepted: false })}
+                    className="flex-1 py-2 border border-[#e51940] font-[Oswald] text-[11px] tracking-[2px] uppercase text-[#e51940] min-h-11"
+                  >
+                    Refuser
+                  </button>
+                </div>
+              )}
+
+              {alt.status === RequestLineStatus.AlternativeDenied && (
+                <p className="font-[Oswald] text-[10px] tracking-[1.5px] uppercase text-[#e51940] mt-2">
+                  Refusée
+                </p>
+              )}
+              {alt.status === RequestLineStatus.Found && (
+                <p className="font-[Oswald] text-[10px] tracking-[1.5px] uppercase text-[#43a200] mt-2">
+                  Acceptée
+                </p>
+              )}
+            </div>
+          ))}
         </div>
       )}
 
       {/* Actions */}
-      {(onCancel || onModify || onAcceptAlternative || onRejectAlternative) && (
+      {(onCancel || onModify) && (
         <div className="flex gap-2 mt-4">
           {onModify && (
             <button
               type="button"
               onClick={onModify}
-              className="flex-1 py-3 border border-[#121212] font-[Oswald] text-[12px] tracking-[2px] uppercase text-[#121212] min-h-[44px]"
+              className="flex-1 py-3 border border-[#121212] font-[Oswald] text-[12px] tracking-[2px] uppercase text-[#121212] min-h-11"
             >
               Modifier
             </button>
@@ -124,7 +163,7 @@ export default function RequestCard({
             <button
               type="button"
               onClick={() => setConfirmCancel(true)}
-              className="flex-1 py-3 border border-[#e1e1e1] font-[Oswald] text-[12px] tracking-[2px] uppercase text-[#969696] min-h-[44px]"
+              className="flex-1 py-3 border border-[#e1e1e1] font-[Oswald] text-[12px] tracking-[2px] uppercase text-[#969696] min-h-11"
             >
               Annuler
             </button>
@@ -134,36 +173,18 @@ export default function RequestCard({
               <button
                 type="button"
                 onClick={() => { onCancel(); setConfirmCancel(false); }}
-                className="flex-1 py-3 border border-[#e51940] font-[Oswald] text-[12px] tracking-[2px] uppercase text-[#e51940] min-h-[44px]"
+                className="flex-1 py-3 border border-[#e51940] font-[Oswald] text-[12px] tracking-[2px] uppercase text-[#e51940] min-h-11"
               >
                 Confirmer l'annulation
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmCancel(false)}
-                className="flex-1 py-3 border border-[#e1e1e1] font-[Oswald] text-[12px] tracking-[2px] uppercase text-[#969696] min-h-[44px]"
+                className="flex-1 py-3 border border-[#e1e1e1] font-[Oswald] text-[12px] tracking-[2px] uppercase text-[#969696] min-h-11"
               >
                 Ne pas annuler
               </button>
             </>
-          )}
-          {onAcceptAlternative && (
-            <button
-              type="button"
-              onClick={onAcceptAlternative}
-              className="flex-1 py-3 bg-[#121212] font-[Oswald] text-[12px] tracking-[2px] uppercase text-white min-h-[44px]"
-            >
-              Accepter
-            </button>
-          )}
-          {onRejectAlternative && (
-            <button
-              type="button"
-              onClick={onRejectAlternative}
-              className="flex-1 py-3 border border-[#e51940] font-[Oswald] text-[12px] tracking-[2px] uppercase text-[#e51940] min-h-[44px]"
-            >
-              Refuser
-            </button>
           )}
         </div>
       )}

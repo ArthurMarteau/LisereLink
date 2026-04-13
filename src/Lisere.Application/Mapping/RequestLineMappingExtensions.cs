@@ -6,6 +6,20 @@ namespace Lisere.Application.Mapping;
 
 public static class RequestLineMappingExtensions
 {
+    public static AlternativeRequestLineDto ToDto(this AlternativeRequestLine alt) => new()
+    {
+        Id                  = alt.Id,
+        RequestId           = alt.RequestId,
+        ArticleId           = alt.ArticleId,
+        ArticleName         = alt.ArticleName,
+        ArticleColorOrPrint = alt.ArticleColorOrPrint,
+        ArticleBarcode      = alt.ArticleBarcode,
+        RequestedSizes      = alt.RequestedSizes.ToList(),
+        Quantity            = alt.Quantity,
+        Status              = alt.Status.ToString(),
+        StockOverride       = alt.StockOverride,
+    };
+
     public static RequestLineDto ToDto(this RequestLine line) => new()
     {
         Id             = line.Id,

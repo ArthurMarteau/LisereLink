@@ -21,6 +21,7 @@ function getStyle(status: Status): string {
     case RequestLineStatus.Found:
       return 'border border-[#43a200] text-[#43a200]';
     case RequestLineStatus.NotFound:
+    case RequestLineStatus.AlternativeDenied:
       return 'border border-[#e51940] text-[#e51940]';
     default:
       return 'bg-[#e1e1e1] text-[#555]';

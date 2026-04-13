@@ -7,4 +7,5 @@ public interface INotificationService
     Task NotifyNewRequestAsync(RequestDto request);
     Task NotifyRequestUpdatedAsync(RequestDto request);
     Task NotifyRequestCancelledAsync(Guid requestId, Guid sellerId);
+    Task NotifyStockistRequestUpdatedAsync(RequestDto request);
 }

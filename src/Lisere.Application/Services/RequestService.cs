@@ -3,6 +3,7 @@ using Lisere.Application.DTOs;
 using Lisere.Application.Exceptions;
 using Lisere.Application.Interfaces;
 using Lisere.Application.Mapping;
+using Lisere.Domain.Entities;
 using Lisere.Domain.Enums;
 using Lisere.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -119,52 +120,168 @@ public class RequestService : IRequestService
         var request = await _requestRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new KeyNotFoundException($"Demande {id} introuvable.");
 
-        var sellerId = request.SellerId;
+        if (request.Status != RequestStatus.Pending)
+            throw new BusinessException("Seules les demandes en attente peuvent être annulées.");
 
-        await _requestRepository.DeleteAsync(id, cancellationToken);
-
-        _ = _notificationService.NotifyRequestCancelledAsync(id, sellerId).ContinueWith(
-            t => _logger.LogWarning(t.Exception, "Échec de la notification SignalR (RequestCancelled)."),
-            TaskContinuationOptions.OnlyOnFaulted);
-    }
-
-    public async Task<RequestDto> AcceptAlternativeAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        var request = await _requestRepository.GetByIdAsync(id, cancellationToken)
-            ?? throw new KeyNotFoundException($"Demande {id} introuvable.");
-
-        if (request.Status != RequestStatus.AwaitingSellerResponse)
-            throw new BusinessException("La demande doit être en attente de réponse vendeur pour accepter une alternative.");
-
-        request.Status = RequestStatus.InProgress;
+        request.Status = RequestStatus.Cancelled;
+        request.CancelledAt = DateTime.UtcNow;
         request.ModifiedAt = DateTime.UtcNow;
 
         await _requestRepository.UpdateAsync(request, cancellationToken);
         var requestDto = request.ToDto();
 
         _ = _notificationService.NotifyRequestUpdatedAsync(requestDto).ContinueWith(
-            t => _logger.LogWarning(t.Exception, "Échec de la notification SignalR (AcceptAlternative)."),
+            t => _logger.LogWarning(t.Exception, "Échec de la notification SignalR (CancelRequest)."),
+            TaskContinuationOptions.OnlyOnFaulted);
+    }
+
+    public async Task<RequestDto> TakeInProgressAsync(
+        Guid requestId,
+        Guid stockistId,
+        CancellationToken cancellationToken = default)
+    {
+        var request = await _requestRepository.GetByIdAsync(requestId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Demande {requestId} introuvable.");
+
+        if (request.Status != RequestStatus.Pending)
+            throw new BusinessException("Seules les demandes en attente peuvent être prises en charge.");
+
+        request.StockistId = stockistId;
+        request.Status = RequestStatus.InProgress;
+        request.ModifiedAt = DateTime.UtcNow;
+        request.ModifiedBy = stockistId.ToString();
+
+        await _requestRepository.UpdateAsync(request, cancellationToken);
+        var requestDto = request.ToDto();
+
+        _ = _notificationService.NotifyRequestUpdatedAsync(requestDto).ContinueWith(
+            t => _logger.LogWarning(t.Exception, "Échec de la notification SignalR (TakeInProgress)."),
             TaskContinuationOptions.OnlyOnFaulted);
 
         return requestDto;
     }
 
-    public async Task<RequestDto> RejectAlternativeAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<RequestDto> MarkLineFoundAsync(
+        Guid requestId,
+        Guid lineId,
+        CancellationToken cancellationToken = default)
     {
-        var request = await _requestRepository.GetByIdAsync(id, cancellationToken)
-            ?? throw new KeyNotFoundException($"Demande {id} introuvable.");
+        var request = await _requestRepository.GetByIdAsync(requestId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Demande {requestId} introuvable.");
 
-        if (request.Status != RequestStatus.AwaitingSellerResponse)
-            throw new BusinessException("La demande doit être en attente de réponse vendeur pour rejeter une alternative.");
+        if (request.Status != RequestStatus.InProgress)
+            throw new BusinessException("La demande doit être en cours de traitement pour marquer une ligne.");
 
-        request.Status = RequestStatus.Unavailable;
+        var line = request.Lines.FirstOrDefault(l => l.Id == lineId)
+            ?? throw new KeyNotFoundException($"Ligne {lineId} introuvable dans la demande {requestId}.");
+
+        if (line.Status != RequestLineStatus.Pending)
+            throw new BusinessException("Seules les lignes en attente peuvent être marquées comme trouvées.");
+
+        line.Status = RequestLineStatus.Found;
+        line.ModifiedAt = DateTime.UtcNow;
+        line.ModifiedBy = request.StockistId?.ToString() ?? string.Empty;
+
+        if (request.Lines.All(l => l.Status == RequestLineStatus.Found))
+        {
+            request.Status = RequestStatus.Delivered;
+            request.CompletedAt = DateTime.UtcNow;
+        }
+
         request.ModifiedAt = DateTime.UtcNow;
 
         await _requestRepository.UpdateAsync(request, cancellationToken);
         var requestDto = request.ToDto();
 
         _ = _notificationService.NotifyRequestUpdatedAsync(requestDto).ContinueWith(
-            t => _logger.LogWarning(t.Exception, "Échec de la notification SignalR (RejectAlternative)."),
+            t => _logger.LogWarning(t.Exception, "Échec de la notification SignalR (MarkLineFound)."),
+            TaskContinuationOptions.OnlyOnFaulted);
+
+        return requestDto;
+    }
+
+    public async Task<RequestDto> ProposeAlternativesAsync(
+        Guid requestId,
+        ProposeAlternativesDto dto,
+        CancellationToken cancellationToken = default)
+    {
+        var request = await _requestRepository.GetByIdAsync(requestId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Demande {requestId} introuvable.");
+
+        if (request.Status != RequestStatus.InProgress)
+            throw new BusinessException("Des alternatives ne peuvent être proposées que pour une demande en cours de traitement.");
+
+        var now = DateTime.UtcNow;
+        var actor = dto.StockistId.ToString();
+
+        foreach (var line in dto.Lines)
+        {
+            request.AlternativeLines.Add(new AlternativeRequestLine
+            {
+                Id                  = Guid.NewGuid(),
+                RequestId           = requestId,
+                ArticleId           = line.ArticleId,
+                ArticleName         = line.ArticleName,
+                ArticleColorOrPrint = line.ArticleColorOrPrint,
+                ArticleBarcode      = line.ArticleBarcode,
+                RequestedSizes      = line.RequestedSizes.ToList(),
+                Quantity            = line.Quantity,
+                Status              = RequestLineStatus.AlternativeProposed,
+                StockOverride       = line.StockOverride,
+                CreatedAt           = now,
+                CreatedBy           = actor,
+            });
+        }
+
+        request.Status = RequestStatus.AwaitingSellerResponse;
+        request.ModifiedAt = now;
+        request.ModifiedBy = actor;
+
+        await _requestRepository.UpdateAsync(request, cancellationToken);
+        var requestDto = request.ToDto();
+
+        _ = _notificationService.NotifyRequestUpdatedAsync(requestDto).ContinueWith(
+            t => _logger.LogWarning(t.Exception, "Échec de la notification SignalR (ProposeAlternatives)."),
+            TaskContinuationOptions.OnlyOnFaulted);
+
+        return requestDto;
+    }
+
+    public async Task<RequestDto> RespondToAlternativesAsync(
+        Guid requestId,
+        RespondToAlternativesDto dto,
+        CancellationToken cancellationToken = default)
+    {
+        var request = await _requestRepository.GetByIdAsync(requestId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Demande {requestId} introuvable.");
+
+        if (request.Status != RequestStatus.AwaitingSellerResponse)
+            throw new BusinessException("La demande doit être en attente de réponse vendeur.");
+
+        var now = DateTime.UtcNow;
+
+        foreach (var response in dto.Responses)
+        {
+            var altLine = request.AlternativeLines.FirstOrDefault(a => a.Id == response.AlternativeLineId)
+                ?? throw new KeyNotFoundException($"Ligne alternative {response.AlternativeLineId} introuvable.");
+
+            altLine.Status = response.Accepted
+                ? RequestLineStatus.Found
+                : RequestLineStatus.AlternativeDenied;
+
+            altLine.ModifiedAt = now;
+            altLine.ModifiedBy = request.SellerId.ToString();
+        }
+
+        request.Status = RequestStatus.InProgress;
+        request.ModifiedAt = now;
+        request.ModifiedBy = request.SellerId.ToString();
+
+        await _requestRepository.UpdateAsync(request, cancellationToken);
+        var requestDto = request.ToDto();
+
+        _ = _notificationService.NotifyStockistRequestUpdatedAsync(requestDto).ContinueWith(
+            t => _logger.LogWarning(t.Exception, "Échec de la notification SignalR (RespondToAlternatives)."),
             TaskContinuationOptions.OnlyOnFaulted);
 
         return requestDto;

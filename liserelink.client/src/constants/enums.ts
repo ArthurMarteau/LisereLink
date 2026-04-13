@@ -12,6 +12,7 @@ export enum RequestLineStatus {
   Found = 'Found',
   NotFound = 'NotFound',
   AlternativeProposed = 'AlternativeProposed',
+  AlternativeDenied = 'AlternativeDenied',
 }
 
 export enum UserRole {

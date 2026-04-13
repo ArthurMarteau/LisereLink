@@ -85,6 +85,7 @@ const REQUEST_LINE_STATUS_LABELS: Record<RequestLineStatus, string> = {
   [RequestLineStatus.Found]: 'Trouvé',
   [RequestLineStatus.NotFound]: 'Introuvable',
   [RequestLineStatus.AlternativeProposed]: 'Alternative proposée',
+  [RequestLineStatus.AlternativeDenied]: 'Refusée',
 };
 
 export function formatRequestLineStatus(status: RequestLineStatus): string {
