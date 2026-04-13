@@ -33,13 +33,10 @@ public class RequestService : IRequestService
     {
         foreach (var line in dto.Lines)
         {
-            foreach (var size in line.RequestedSizes)
-            {
-                var isAvailable = await _stockService.IsAvailableAsync(line.ArticleId, size, dto.StoreId, cancellationToken);
-                if (!isAvailable)
-                    throw new BusinessException(
-                        $"Stock insuffisant pour l'article {line.ArticleId} en taille {size}.");
-            }
+            var isAvailable = await _stockService.IsAvailableAsync(line.ArticleId, line.Size, dto.StoreId, cancellationToken);
+            if (!isAvailable)
+                throw new BusinessException(
+                    $"Stock insuffisant pour l'article {line.ArticleId} en taille {line.Size}.");
         }
 
         var request = dto.ToEntity();
@@ -184,20 +181,61 @@ public class RequestService : IRequestService
         line.Status = RequestLineStatus.Found;
         line.ModifiedAt = DateTime.UtcNow;
         line.ModifiedBy = request.StockistId?.ToString() ?? string.Empty;
-
-        if (request.Lines.All(l => l.Status == RequestLineStatus.Found))
-        {
-            request.Status = RequestStatus.Delivered;
-            request.CompletedAt = DateTime.UtcNow;
-        }
-
         request.ModifiedAt = DateTime.UtcNow;
 
         await _requestRepository.UpdateAsync(request, cancellationToken);
-        var requestDto = request.ToDto();
+
+        var freshRequest = await _requestRepository.GetByIdAsync(requestId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Demande {requestId} introuvable.");
+
+        TryCloseRequest(freshRequest);
+        if (freshRequest.Status != request.Status)
+            await _requestRepository.UpdateAsync(freshRequest, cancellationToken);
+
+        var requestDto = freshRequest.ToDto();
 
         _ = _notificationService.NotifyRequestUpdatedAsync(requestDto).ContinueWith(
             t => _logger.LogWarning(t.Exception, "Échec de la notification SignalR (MarkLineFound)."),
+            TaskContinuationOptions.OnlyOnFaulted);
+
+        return requestDto;
+    }
+
+    public async Task<RequestDto> MarkLineNotFoundAsync(
+        Guid requestId,
+        Guid lineId,
+        CancellationToken cancellationToken = default)
+    {
+        var request = await _requestRepository.GetByIdAsync(requestId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Demande {requestId} introuvable.");
+
+        if (request.Status != RequestStatus.InProgress)
+            throw new BusinessException("La demande doit être en cours de traitement pour marquer une ligne.");
+
+        var line = request.Lines.FirstOrDefault(l => l.Id == lineId)
+            ?? throw new KeyNotFoundException($"Ligne {lineId} introuvable dans la demande {requestId}.");
+
+        if (line.Status != RequestLineStatus.Pending)
+            throw new BusinessException("Seules les lignes en attente peuvent être marquées comme non trouvées.");
+
+        line.Status = RequestLineStatus.NotFound;
+        line.ModifiedAt = DateTime.UtcNow;
+        line.ModifiedBy = request.StockistId?.ToString() ?? string.Empty;
+        request.ModifiedAt = DateTime.UtcNow;
+
+        await _requestRepository.UpdateAsync(request, cancellationToken);
+
+        var freshRequest = await _requestRepository.GetByIdAsync(requestId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Demande {requestId} introuvable.");
+
+        TryCloseRequest(freshRequest);
+        if (freshRequest.Status != request.Status)
+            await _requestRepository.UpdateAsync(freshRequest, cancellationToken);
+
+        var requestDto = freshRequest.ToDto();
+
+        _ = _notificationService.NotifyRequestUpdatedAsync(requestDto).ContinueWith(
+            t => _logger.LogWarning(t.Exception, "Échec de la notification SignalR (MarkLineNotFound)."),
             TaskContinuationOptions.OnlyOnFaulted);
 
         return requestDto;
@@ -276,7 +314,11 @@ public class RequestService : IRequestService
             altLine.ModifiedBy = request.SellerId.ToString();
         }
 
-        request.Status = RequestStatus.InProgress;
+        TryCloseRequest(request);
+        if (request.Status == RequestStatus.AwaitingSellerResponse)
+        {
+            request.Status = RequestStatus.InProgress;
+        }
         request.ModifiedAt = now;
         request.ModifiedBy = request.SellerId.ToString();
 
@@ -288,5 +330,29 @@ public class RequestService : IRequestService
             TaskContinuationOptions.OnlyOnFaulted);
 
         return requestDto;
+    }
+
+    private static void TryCloseRequest(Request request)
+    {
+        var allOriginalProcessed = request.Lines.All(l =>
+            l.Status == RequestLineStatus.Found ||
+            l.Status == RequestLineStatus.NotFound);
+
+        var allAlternativesProcessed = request.AlternativeLines.All(a =>
+            a.Status == RequestLineStatus.Found ||
+            a.Status == RequestLineStatus.AlternativeDenied);
+
+        if (!allOriginalProcessed || !allAlternativesProcessed)
+            return;
+
+        var hasAnyNotFound =
+            request.Lines.Any(l => l.Status == RequestLineStatus.NotFound) ||
+            request.AlternativeLines.Any(a => a.Status == RequestLineStatus.AlternativeDenied);
+
+        request.Status = hasAnyNotFound
+            ? RequestStatus.PartiallyProcessed
+            : RequestStatus.Processed;
+
+        request.CompletedAt = DateTime.UtcNow;
     }
 }

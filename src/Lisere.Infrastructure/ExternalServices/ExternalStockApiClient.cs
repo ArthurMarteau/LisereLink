@@ -81,6 +81,23 @@ public class ExternalStockApiClient : IExternalStockApiClient
         }
     }
 
+    public async Task<ArticleDto?> GetArticleByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            ForwardJwt();
+            var response = await _httpClient.GetFromJsonAsync<StockApiArticleResponse>(
+                $"api/articles/by-id/{id}", cancellationToken);
+
+            return response?.MapToArticleDto();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "StockApi indisponible — GetArticleByIdAsync({ArticleId}) a échoué.", id);
+            return null;
+        }
+    }
+
     public async Task<IEnumerable<StoreDto>> GetStoresAsync(CancellationToken cancellationToken = default)
     {
         try

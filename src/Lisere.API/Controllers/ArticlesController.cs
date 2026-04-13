@@ -45,4 +45,17 @@ public class ArticlesController : ControllerBase
 
         return Ok(article);
     }
+
+    /// <summary>Récupère un article par son identifiant.</summary>
+    [HttpGet("by-id/{id:guid}")]
+    public async Task<ActionResult<ArticleDto>> GetById(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var article = await _articleService.GetByIdAsync(id, cancellationToken);
+        if (article is null)
+            return NotFound();
+
+        return Ok(article);
+    }
 }

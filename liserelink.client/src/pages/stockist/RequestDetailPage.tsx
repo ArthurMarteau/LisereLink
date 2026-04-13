@@ -15,6 +15,14 @@ import { RequestLineStatus, RequestStatus } from '@/constants/enums';
 import { formatZone } from '@/utils/formatters';
 import type { RequestDto } from '@/types';
 
+function isRequestClosed(r: RequestDto): boolean {
+  return (
+    r.status === RequestStatus.Processed ||
+    r.status === RequestStatus.PartiallyProcessed ||
+    r.status === RequestStatus.Unavailable
+  );
+}
+
 function timeAgo(dateStr: string): string {
   const past = Temporal.Instant.from(
     dateStr.endsWith('Z') ? dateStr : dateStr + 'Z',
@@ -40,7 +48,7 @@ export default function RequestDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const alternativeCart = useAlternativeCartStore();
-  const { takeRequest, markLineFound, proposeAlternatives } = useStockistActions();
+  const { takeRequest, markLineFound, markLineNotFound, proposeAlternatives } = useStockistActions();
 
   useEffect(() => {
     if (!id) return;
@@ -58,12 +66,14 @@ export default function RequestDetailPage() {
           cartState.clearCart();
         }
 
+        let resolved: RequestDto;
         if (fetched.status === RequestStatus.Pending) {
           const taken = await takeRequest(id);
-          setRequest(taken ?? fetched);
+          resolved = taken ?? fetched;
         } else {
-          setRequest(fetched);
+          resolved = fetched;
         }
+        setRequest(resolved);
       } catch {
         toast.error('Impossible de charger la demande.');
         navigate('/queue');
@@ -101,7 +111,9 @@ export default function RequestDetailPage() {
       stockOverride: g.stockOverride,
     }));
 
+    console.log('[propose-alternatives] payload:', JSON.stringify(payload, null, 2));
     const result = await proposeAlternatives(request.id, payload);
+    console.log('[propose-alternatives] result:', result);
     if (result) {
       setRequest(result);
       useAlternativeCartStore.getState().clearCart();
@@ -165,65 +177,80 @@ export default function RequestDetailPage() {
           Articles demandés
         </h2>
 
-        {request.lines.map((line) => (
-          <div
-            key={line.id}
-            className="bg-white px-4 py-4 mb-3 border-l-[3px] border-l-[#121212]"
-          >
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <div>
-                <p className="font-['Libre_Baskerville'] text-[14px] text-[#121212]">
-                  {line.articleName}
-                </p>
-                <p className="font-[Oswald] text-[11px] tracking-[1.5px] uppercase text-[#969696] mt-0.5">
-                  {line.colorOrPrint} · {line.requestedSizes.join(' · ')}
-                </p>
-              </div>
-              <StatusBadge status={line.status} />
-            </div>
+        {request.lines.map((line) => {
+          const isProcessed = line.status !== RequestLineStatus.Pending;
 
-            {line.status === RequestLineStatus.Pending &&
-              request.status === RequestStatus.InProgress &&
-              !isTakenByOther && (
-                <div className="flex gap-2 mt-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void markLineFound(request.id, line.id).then((r) => {
+          return (
+            <div
+              key={line.id}
+              className={`bg-white px-4 py-4 mb-3 border-l-[3px] ${
+                line.status === RequestLineStatus.Found
+                  ? 'border-l-[#43a200]'
+                  : line.status === RequestLineStatus.NotFound
+                  ? 'border-l-[#e51940]'
+                  : 'border-l-[#121212]'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div>
+                  <p className="font-['Libre_Baskerville'] text-[14px] text-[#121212]">
+                    {line.articleName}
+                  </p>
+                  <p className="font-[Oswald] text-[11px] tracking-[1.5px] uppercase text-[#969696] mt-0.5">
+                    {line.colorOrPrint} · {line.size}
+                  </p>
+                </div>
+                {isProcessed && <StatusBadge status={line.status} />}
+              </div>
+
+              {!isProcessed &&
+                request.status === RequestStatus.InProgress &&
+                !isTakenByOther && (
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      type="button"
+                      onClick={() => void markLineFound(request.id, line.id).then((r) => {
                         if (!r) return;
                         setRequest(r);
-                        const allFound = r.lines.every(
-                          (l) => l.status === RequestLineStatus.Found
-                        );
-                        if (allFound) {
-                          toast.success('Toutes les lignes trouvées — demande livrée !');
+                        if (isRequestClosed(r)) {
+                          toast.success(r.status === RequestStatus.Processed
+                            ? 'Demande traitée !'
+                            : 'Demande traitée partiellement.');
                           navigate('/queue');
                         }
-                      })
-                    }
-                    className="flex-1 py-3 bg-[#121212] text-white font-[Oswald] text-[12px] tracking-[2px] uppercase min-h-[44px]"
-                  >
-                    Trouvé
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      navigate(`/stockist-search?requestId=${request.id}`)
-                    }
-                    className="flex-1 py-3 border border-[#b28a2c] text-[#b28a2c] font-[Oswald] text-[12px] tracking-[2px] uppercase min-h-[44px]"
-                  >
-                    Alternative
-                  </button>
-                </div>
-              )}
-
-            {line.status === RequestLineStatus.Found && (
-              <p className="font-[Oswald] text-[10px] tracking-[1.5px] uppercase text-[#43a200] mt-2">
-                ✓ Trouvé
-              </p>
-            )}
-          </div>
-        ))}
+                      })}
+                      className="flex-1 py-3 bg-[#121212] text-white font-[Oswald] text-[11px] tracking-[1.5px] uppercase min-h-[44px]"
+                    >
+                      Trouvé
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/stockist-search?requestId=${request.id}`)}
+                      className="flex-1 py-3 border border-[#b28a2c] text-[#b28a2c] font-[Oswald] text-[11px] tracking-[1.5px] uppercase min-h-[44px]"
+                    >
+                      Alternative
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void markLineNotFound(request.id, line.id).then((r) => {
+                        if (!r) return;
+                        setRequest(r);
+                        if (isRequestClosed(r)) {
+                          toast.success(r.status === RequestStatus.Processed
+                            ? 'Demande traitée !'
+                            : 'Demande traitée partiellement.');
+                          navigate('/queue');
+                        }
+                      })}
+                      className="flex-1 py-3 border border-[#e51940] text-[#e51940] font-[Oswald] text-[11px] tracking-[1.5px] uppercase min-h-[44px]"
+                    >
+                      Non trouvé
+                    </button>
+                  </div>
+                )}
+            </div>
+          );
+        })}
       </section>
 
       {/* ── Alternatives à proposer (panier local) ────────────────────────── */}
@@ -235,12 +262,12 @@ export default function RequestDetailPage() {
           {alternativeCart.lines.map((alt, i) => (
             <div
               key={i}
-              className="bg-white px-4 py-4 mb-3 border-2 border-[#e51940]"
+              className="bg-[#b28a2c]/5 border-l-[3px] border-l-[#b28a2c] px-4 py-4 mb-3"
             >
               <div className="flex items-start justify-between">
                 <div>
                   <p className="font-[Oswald] text-[9px] tracking-[2px] uppercase text-[#b28a2c] mb-1">
-                    Alternative
+                    Alternative — En attente d'envoi
                   </p>
                   <p className="font-['Libre_Baskerville'] text-[14px] text-[#121212]">
                     {alt.articleName}
@@ -274,30 +301,47 @@ export default function RequestDetailPage() {
           <h2 className="font-[Oswald] text-[11px] tracking-[2.5px] uppercase text-[#969696] mb-3">
             Alternatives proposées
           </h2>
-          {request.alternativeLines.map((alt) => (
-            <div
-              key={alt.id}
-              className="bg-white px-4 py-4 mb-3 border-2 border-[#e51940]"
-            >
-              <p className="font-[Oswald] text-[9px] tracking-[2px] uppercase text-[#b28a2c] mb-1">
-                Alternative
-              </p>
-              <p className="font-['Libre_Baskerville'] text-[14px] text-[#121212]">
-                {alt.articleName}
-              </p>
-              <p className="font-[Oswald] text-[11px] tracking-[1.5px] uppercase text-[#969696] mt-0.5">
-                {alt.articleColorOrPrint} · {alt.requestedSizes.join(' · ')}
-              </p>
-              {alt.stockOverride && (
-                <p className="font-[Oswald] text-[9px] tracking-[1.5px] uppercase text-[#e51940] mt-1">
-                  ⚠ Hors stock
+          {request.alternativeLines.map((alt) => {
+            const isAccepted = alt.status === RequestLineStatus.Found;
+            const isDenied = alt.status === RequestLineStatus.AlternativeDenied;
+
+            const containerClass = isAccepted
+              ? 'bg-[#43a200]/5 border-l-[3px] border-l-[#43a200]'
+              : isDenied
+                ? 'bg-[#e51940]/5 border-l-[3px] border-l-[#e51940]'
+                : 'bg-[#b28a2c]/5 border-l-[3px] border-l-[#b28a2c]';
+
+            const badgeLabel = isAccepted
+              ? 'Alternative acceptée'
+              : isDenied
+                ? 'Alternative refusée'
+                : 'Alternative — En attente du vendeur';
+
+            const badgeColor = isAccepted
+              ? 'text-[#43a200]'
+              : isDenied
+                ? 'text-[#e51940]'
+                : 'text-[#b28a2c]';
+
+            return (
+              <div key={alt.id} className={`px-4 py-4 mb-3 ${containerClass}`}>
+                <p className={`font-[Oswald] text-[9px] tracking-[2px] uppercase mb-1 ${badgeColor}`}>
+                  {badgeLabel}
                 </p>
-              )}
-              <div className="mt-2">
-                <StatusBadge status={alt.status} />
+                <p className="font-['Libre_Baskerville'] text-[14px] text-[#121212]">
+                  {alt.articleName}
+                </p>
+                <p className="font-[Oswald] text-[11px] tracking-[1.5px] uppercase text-[#969696] mt-0.5">
+                  {alt.articleColorOrPrint} · {alt.requestedSizes.join(' · ')}
+                </p>
+                {alt.stockOverride && (
+                  <p className="font-[Oswald] text-[9px] tracking-[1.5px] uppercase text-[#e51940] mt-1">
+                    ⚠ Hors stock
+                  </p>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </section>
       )}
 

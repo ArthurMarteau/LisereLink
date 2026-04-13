@@ -18,26 +18,13 @@ function isProblemDetails(error: unknown): error is ProblemDetails {
   );
 }
 
-// Group cart lines by articleId+colorOrPrint, collecting all sizes per group.
 function buildLines(lines: CartLine[]) {
-  const map = new Map<string, CartLine & { requestedSizes: string[] }>();
-
-  for (const line of lines) {
-    const key = `${line.articleId}__${line.colorOrPrint}`;
-    const existing = map.get(key);
-    if (existing) {
-      existing.requestedSizes.push(line.size);
-    } else {
-      map.set(key, { ...line, requestedSizes: [line.size] });
-    }
-  }
-
-  return Array.from(map.values()).map((g) => ({
-    articleId: g.articleId,
-    articleName: g.articleName,
-    articleColorOrPrint: g.colorOrPrint,
-    articleBarcode: g.barcode,
-    requestedSizes: g.requestedSizes,
+  return lines.map((line) => ({
+    articleId: line.articleId,
+    articleName: line.articleName,
+    articleColorOrPrint: line.colorOrPrint,
+    articleBarcode: line.barcode,
+    size: line.size,
     quantity: 1,
   }));
 }

@@ -41,4 +41,17 @@ public class ArticlesController : ControllerBase
 
         return Ok(article);
     }
+
+    [HttpGet("by-id/{id:guid}")]
+    public async Task<IActionResult> GetById(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var article = await _stockService.GetArticleByIdAsync(id, cancellationToken);
+
+        if (article is null)
+            return NotFound();
+
+        return Ok(article);
+    }
 }

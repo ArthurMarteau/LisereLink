@@ -62,7 +62,7 @@ export function StockistQueueCard({ request, onClick }: StockistQueueCardProps) 
             {line.articleName}
           </p>
           <p className="font-[Oswald] text-[11px] tracking-[1.5px] uppercase text-[#969696] mt-0.5">
-            {line.colorOrPrint} · {line.requestedSizes.join(' · ')}
+            {line.colorOrPrint} · {line.size}
           </p>
         </div>
       ))}
@@ -81,10 +81,6 @@ export function StockistQueueCard({ request, onClick }: StockistQueueCardProps) 
 }
 
 const QUEUE_STATUSES = new Set<RequestStatus>([RequestStatus.Pending]);
-const IN_PROGRESS_STATUSES = new Set<RequestStatus>([
-  RequestStatus.InProgress,
-  RequestStatus.AwaitingSellerResponse,
-]);
 
 export default function QueuePage() {
   const navigate = useNavigate();
@@ -106,16 +102,8 @@ export default function QueuePage() {
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
 
-  const inProgressRequests = requests
-    .filter((r) => IN_PROGRESS_STATUSES.has(r.status))
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
-
   return (
     <div className="bg-[#f9f4ef] min-h-full pb-8">
-      {/* ── FILE D'ATTENTE ────────────────────────────────────────────────── */}
       <section className="px-5 pt-6">
         <h2 className="font-[Oswald] text-[11px] tracking-[2.5px] uppercase text-[#969696] mb-3">
           File d&apos;attente
@@ -145,24 +133,6 @@ export default function QueuePage() {
           ))}
         </div>
       </section>
-
-      {/* ── EN COURS ──────────────────────────────────────────────────────── */}
-      {inProgressRequests.length > 0 && (
-        <section className="px-5 pt-6">
-          <h2 className="font-[Oswald] text-[11px] tracking-[2.5px] uppercase text-[#969696] mb-3">
-            En cours
-          </h2>
-          <div className="space-y-3">
-            {inProgressRequests.map((request) => (
-              <StockistQueueCard
-                key={request.id}
-                request={request}
-                onClick={() => navigate(`/queue/${request.id}`)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   );
 }

@@ -115,6 +115,20 @@ public class RequestsController : ControllerBase
         return Ok(request);
     }
 
+    /// <summary>Le stockiste marque une ligne comme non trouvée.</summary>
+    [HttpPost("{id:guid}/lines/{lineId:guid}/not-found")]
+    [ProducesResponseType(typeof(RequestDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<RequestDto>> MarkLineNotFound(
+        Guid id,
+        Guid lineId,
+        CancellationToken cancellationToken = default)
+    {
+        var request = await _requestService.MarkLineNotFoundAsync(id, lineId, cancellationToken);
+        return Ok(request);
+    }
+
     /// <summary>Le stockiste propose des alternatives au vendeur.</summary>
     [HttpPost("{id:guid}/propose-alternatives")]
     [ProducesResponseType(typeof(RequestDto), StatusCodes.Status200OK)]

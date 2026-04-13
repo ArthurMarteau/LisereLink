@@ -40,6 +40,11 @@ export function useStockistActions() {
           pageSize: 50,
         },
       });
+      // setRequests fait un REPLACE complet du store — pas de merge.
+      // Si des demandes périmées persistent en base (Status = 'InProgress' depuis > 24h),
+      // les nettoyer manuellement via :
+      // UPDATE Requests SET Status = 'PartiallyProcessed', CompletedAt = GETUTCDATE()
+      // WHERE Status = 'InProgress' AND CreatedAt < DATEADD(day, -1, GETUTCDATE())
       setRequests(response.data.items);
     } catch (error) {
       const message = isProblemDetails(error)
@@ -92,6 +97,25 @@ export function useStockistActions() {
     [storeUpdate],
   );
 
+  const markLineNotFound = useCallback(
+    async (requestId: string, lineId: string): Promise<RequestDto | null> => {
+      try {
+        const response = await apiClient.post<RequestDto>(
+          `/requests/${requestId}/lines/${lineId}/not-found`,
+        );
+        storeUpdate(requestId, response.data);
+        return response.data;
+      } catch (error) {
+        const message = isProblemDetails(error)
+          ? error.detail
+          : 'Impossible de marquer la ligne comme non trouvée.';
+        toast.error(message);
+        return null;
+      }
+    },
+    [storeUpdate],
+  );
+
   const proposeAlternatives = useCallback(
     async (
       requestId: string,
@@ -121,6 +145,7 @@ export function useStockistActions() {
     fetchStockistRequests,
     takeRequest,
     markLineFound,
+    markLineNotFound,
     proposeAlternatives,
     addRequest,
   };

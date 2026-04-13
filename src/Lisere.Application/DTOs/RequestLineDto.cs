@@ -12,8 +12,7 @@ public class RequestLineDto
 
     public string ColorOrPrint { get; set; } = string.Empty;
 
-    /// <summary>Liste des tailles demandées converties en string.</summary>
-    public List<string> RequestedSizes { get; set; } = new();
+    public string Size { get; set; } = string.Empty;
 
     public int Quantity { get; set; }
 

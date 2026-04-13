@@ -1,4 +1,4 @@
-import { useState, use, Suspense, useCallback } from 'react';
+import { useState, use, useEffect, Suspense, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
@@ -7,7 +7,7 @@ import { useArticleStore } from '@/stores/useArticleStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useAlternativeCartStore } from '@/stores/useAlternativeCartStore';
 import SizeChip from '@/components/ui/SizeChip';
-import type { StockDto } from '@/types';
+import type { ArticleDto, StockDto } from '@/types';
 import type { Size } from '@/constants/enums';
 
 // ── Stock section ─────────────────────────────────────────────────────────────
@@ -91,11 +91,23 @@ export default function StockistArticleDetailPage() {
   const [searchParams] = useSearchParams();
   const requestId = searchParams.get('requestId') ?? '';
 
-  const selectedArticle = useArticleStore((s) => s.selectedArticle);
+  const [article, setArticle] = useState<ArticleDto | null>(
+    useArticleStore.getState().article,
+  );
   const selectedStoreId = useAuthStore((s) => s.selectedStoreId);
   const addLine = useAlternativeCartStore((s) => s.addLine);
 
   const [selectedSizes, setSelectedSizes] = useState<Size[]>([]);
+
+  useEffect(() => {
+    if (article) return;
+    if (!articleId) return;
+
+    apiClient
+      .get<ArticleDto>(`/articles/by-id/${articleId}`)
+      .then((r) => setArticle(r.data))
+      .catch(() => toast.error('Article introuvable.'));
+  }, [articleId, article]);
 
   const [stockPromise] = useState<Promise<StockDto[]>>(() => {
     if (!articleId || !selectedStoreId) return Promise.resolve([]);
@@ -117,7 +129,9 @@ export default function StockistArticleDetailPage() {
   }, []);
 
   async function handleAddToAlternative() {
-    if (!selectedArticle || selectedSizes.length === 0) return;
+    if (!article || selectedSizes.length === 0) return;
+
+    console.log('[alternative-cart] adding lines for article:', article.name, 'sizes:', selectedSizes);
 
     // Resolve stock to determine stockOverride
     let stocks: StockDto[] = [];
@@ -134,20 +148,21 @@ export default function StockistArticleDetailPage() {
 
     for (const size of selectedSizes) {
       addLine({
-        articleId: selectedArticle.id,
-        articleName: selectedArticle.name,
-        colorOrPrint: selectedArticle.colorOrPrint,
-        barcode: selectedArticle.barcode,
+        articleId: article.id,
+        articleName: article.name,
+        colorOrPrint: article.colorOrPrint,
+        barcode: article.barcode,
         size,
         quantity: 1,
         stockOverride: getQuantity(size) === 0,
       });
     }
 
+    console.log('[alternative-cart] cart after add:', useAlternativeCartStore.getState().lines);
     navigate(`/queue/${requestId}`);
   }
 
-  if (!selectedArticle) {
+  if (!article) {
     return (
       <div className="flex items-center justify-center py-20">
         <p className="font-[Oswald] text-[11px] tracking-[2px] uppercase text-[#969696]">
@@ -176,10 +191,10 @@ export default function StockistArticleDetailPage() {
         className="w-full bg-[#f0ece6] overflow-hidden"
         style={{ aspectRatio: '4/5', maxHeight: '288px' }}
       >
-        {selectedArticle.imageUrl ? (
+        {article.imageUrl ? (
           <img
-            src={selectedArticle.imageUrl}
-            alt={selectedArticle.name}
+            src={article.imageUrl}
+            alt={article.name}
             className="w-full h-full object-cover"
           />
         ) : (
@@ -200,10 +215,10 @@ export default function StockistArticleDetailPage() {
       {/* Article info */}
       <div className="px-5 py-5 bg-white">
         <h1 className="font-['Libre_Baskerville'] text-[20px] text-[#121212] mb-1">
-          {selectedArticle.name}
+          {article.name}
         </h1>
         <p className="font-[Oswald] text-[11px] tracking-[2px] uppercase text-[#969696]">
-          {selectedArticle.colorOrPrint} · {selectedArticle.family}
+          {article.colorOrPrint} · {article.family}
         </p>
       </div>
 
@@ -212,7 +227,7 @@ export default function StockistArticleDetailPage() {
         <Suspense fallback={<StockSkeleton />}>
           <StockSection
             promise={stockPromise}
-            availableSizes={selectedArticle.availableSizes}
+            availableSizes={article.availableSizes}
             selectedSizes={selectedSizes}
             onToggleSize={handleToggleSize}
           />

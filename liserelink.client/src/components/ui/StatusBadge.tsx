@@ -12,8 +12,10 @@ function getStyle(status: Status): string {
     case RequestStatus.AwaitingSellerResponse:
     case RequestLineStatus.AlternativeProposed:
       return 'bg-[#b28a2c] text-white';
-    case RequestStatus.Delivered:
+    case RequestStatus.Processed:
       return 'bg-[#43a200] text-white';
+    case RequestStatus.PartiallyProcessed:
+      return 'bg-[#b28a2c] text-white';
     case RequestStatus.Unavailable:
       return 'bg-[#e51940] text-white';
     case RequestStatus.Cancelled:

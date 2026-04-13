@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useRequestStore } from '@/stores/useRequestStore';
 import { useRequestActions } from '@/hooks/useRequestActions';
 import RequestCard from '@/components/ui/RequestCard';
@@ -6,12 +7,14 @@ import { RequestStatus } from '@/constants/enums';
 import { isCompletedToday } from '@/utils/requestUtils';
 
 const HISTORY_STATUSES = new Set<RequestStatus>([
-  RequestStatus.Delivered,
+  RequestStatus.Processed,
+  RequestStatus.PartiallyProcessed,
   RequestStatus.Unavailable,
   RequestStatus.Cancelled,
 ]);
 
 export default function SellerHistoryPage() {
+  const navigate = useNavigate();
   const requests = useRequestStore((s) => s.requests);
   const isLoading = useRequestStore((s) => s.isLoading);
   const { fetchRequests } = useRequestActions();
@@ -48,7 +51,13 @@ export default function SellerHistoryPage() {
 
         <div className="space-y-3" style={{ opacity: 0.6 }}>
           {historyRequests.map((request) => (
-            <RequestCard key={request.id} request={request} />
+            <div
+              key={request.id}
+              onClick={() => navigate(`/history/${request.id}`)}
+              className="cursor-pointer"
+            >
+              <RequestCard request={request} />
+            </div>
           ))}
         </div>
       </section>

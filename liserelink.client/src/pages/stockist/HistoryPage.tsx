@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useRequestStore } from '@/stores/useRequestStore';
 import { useStockistActions } from '@/hooks/useStockistActions';
 import { StockistQueueCard } from '@/pages/stockist/QueuePage';
@@ -6,12 +7,14 @@ import { RequestStatus } from '@/constants/enums';
 import { isCompletedToday } from '@/utils/requestUtils';
 
 const HISTORY_STATUSES = new Set<RequestStatus>([
-  RequestStatus.Delivered,
+  RequestStatus.Processed,
+  RequestStatus.PartiallyProcessed,
   RequestStatus.Unavailable,
   RequestStatus.Cancelled,
 ]);
 
 export default function StockistHistoryPage() {
+  const navigate = useNavigate();
   const requests = useRequestStore((s) => s.requests);
   const isLoading = useRequestStore((s) => s.isLoading);
   const { fetchStockistRequests } = useStockistActions();
@@ -52,11 +55,16 @@ export default function StockistHistoryPage() {
 
         <div className="space-y-3 opacity-60">
           {historyRequests.map((request) => (
-            <StockistQueueCard
+            <div
               key={request.id}
-              request={request}
-              onClick={() => undefined}
-            />
+              onClick={() => navigate(`/stockist-history/${request.id}`)}
+              className="cursor-pointer"
+            >
+              <StockistQueueCard
+                request={request}
+                onClick={() => undefined}
+              />
+            </div>
           ))}
         </div>
       </section>

@@ -133,6 +133,12 @@ public class StockService : IStockService
         return article is null ? null : MapArticleToDto(article);
     }
 
+    public async Task<ArticleDto?> GetArticleByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var article = await _articleRepository.GetByIdAsync(id, cancellationToken);
+        return article is null ? null : MapArticleToDto(article);
+    }
+
     private static StockEntryDto MapEntryToDto(StockEntry entry) => new()
     {
         ArticleId = entry.ArticleId,

@@ -70,7 +70,8 @@ const REQUEST_STATUS_LABELS: Record<RequestStatus, string> = {
   [RequestStatus.Pending]: 'En attente',
   [RequestStatus.InProgress]: 'En cours',
   [RequestStatus.AwaitingSellerResponse]: 'En attente du vendeur',
-  [RequestStatus.Delivered]: 'Livré',
+  [RequestStatus.Processed]: 'Traitée',
+  [RequestStatus.PartiallyProcessed]: 'Traitée partiellement',
   [RequestStatus.Unavailable]: 'Indisponible',
   [RequestStatus.Cancelled]: 'Annulée',
 };

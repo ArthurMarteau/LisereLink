@@ -59,13 +59,9 @@ export interface RequestLineDto {
   articleName: string;
   articleBarcode: string;
   colorOrPrint: string;
-  requestedSizes: Size[];
+  size: Size;
   quantity: number;
   status: RequestLineStatus;
-  alternativeArticleId?: string;
-  alternativeColorOrPrint?: string;
-  alternativeSizes?: Size[];
-  alternativeStockOverride?: boolean;
 }
 
 export interface RequestDto {

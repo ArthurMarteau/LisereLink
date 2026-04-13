@@ -83,7 +83,7 @@ public class MappingExtensionsTests
             RequestId           = Guid.NewGuid(),
             ArticleId           = Guid.NewGuid(),
             ArticleColorOrPrint = "Bleu nuit",
-            RequestedSizes      = ["S", "M"],
+            Size                = "M",
             Quantity            = 2,
             Status              = RequestLineStatus.Found,
             CreatedBy           = "user3",
@@ -92,7 +92,7 @@ public class MappingExtensionsTests
         var dto = line.ToDto();
 
         Assert.Equal("Bleu nuit", dto.ColorOrPrint);
-        Assert.Equal(new[] { "S", "M" }, dto.RequestedSizes);
+        Assert.Equal("M", dto.Size);
         Assert.Equal("Found", dto.Status);
     }
 
@@ -107,7 +107,7 @@ public class MappingExtensionsTests
             ArticleName         = "Manteau Laine",
             ArticleColorOrPrint = "Rouge",
             ArticleBarcode      = "1234567890123",
-            RequestedSizes      = ["L", "XL"],
+            Size                = "L",
             Quantity            = 3,
         };
 

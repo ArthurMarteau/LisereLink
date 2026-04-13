@@ -14,7 +14,7 @@ public class RequestLine : BaseEntity
 
     public string ArticleBarcode { get; set; } = string.Empty;
 
-    public List<string> RequestedSizes { get; set; } = new();
+    public string Size { get; set; } = string.Empty;
 
     public int Quantity { get; set; }
 

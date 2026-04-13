@@ -5,7 +5,8 @@ public enum RequestStatus
     Pending,
     InProgress,
     AwaitingSellerResponse,
-    Delivered,
+    Processed,
+    PartiallyProcessed,
     Unavailable,
     Cancelled
 }

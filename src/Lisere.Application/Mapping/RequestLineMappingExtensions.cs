@@ -28,7 +28,7 @@ public static class RequestLineMappingExtensions
         ArticleName    = line.ArticleName,
         ColorOrPrint   = line.ArticleColorOrPrint,
         ArticleBarcode = line.ArticleBarcode,
-        RequestedSizes = line.RequestedSizes.ToList(),
+        Size           = line.Size,
         Quantity       = line.Quantity,
         Status         = line.Status.ToString(),
     };
@@ -40,7 +40,7 @@ public static class RequestLineMappingExtensions
         ArticleName         = dto.ArticleName,
         ArticleColorOrPrint = dto.ArticleColorOrPrint,
         ArticleBarcode      = dto.ArticleBarcode,
-        RequestedSizes      = dto.RequestedSizes.ToList(),
+        Size                = dto.Size,
         Quantity            = dto.Quantity,
         Status              = RequestLineStatus.Pending,
     };

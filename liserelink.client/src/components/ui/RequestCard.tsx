@@ -24,8 +24,10 @@ function borderColor(status: RequestStatus): string {
       return 'border-l-[3px] border-l-[#b28a2c]';
     case RequestStatus.AwaitingSellerResponse:
       return 'border-l-[3px] border-l-[#b28a2c] animate-pulse';
-    case RequestStatus.Delivered:
+    case RequestStatus.Processed:
       return 'border-l-[3px] border-l-[#43a200]';
+    case RequestStatus.PartiallyProcessed:
+      return 'border-l-[3px] border-l-[#b28a2c]';
     default:
       return 'border-l-[3px] border-l-[#e1e1e1]';
   }
@@ -74,7 +76,7 @@ export default function RequestCard({
             {line.colorOrPrint}
           </p>
           <p className="font-[Oswald] text-[11px] tracking-[1.5px] uppercase text-[#969696] mt-0.5">
-            {line.requestedSizes.join(' · ')}
+            {line.size}
           </p>
         </div>
       ))}
@@ -96,59 +98,68 @@ export default function RequestCard({
             Alternatives proposées
           </p>
 
-          {request.alternativeLines.map((alt) => (
-            <div key={alt.id} className="border-2 border-[#e51940] px-3 py-3 mb-3">
-              <p className="font-[Oswald] text-[9px] tracking-[2px] uppercase text-[#b28a2c] mb-1">
-                Alternative
-              </p>
+          {request.alternativeLines.map((alt) => {
+            const isAccepted = alt.status === RequestLineStatus.Found;
+            const isDenied = alt.status === RequestLineStatus.AlternativeDenied;
 
-              <p className="font-['Libre_Baskerville'] text-[13px] text-[#121212]">
-                {alt.articleName}
-              </p>
-              <p className="font-[Oswald] text-[11px] tracking-[1.5px] uppercase text-[#969696] mt-0.5">
-                {alt.articleColorOrPrint}
-              </p>
-              <p className="font-[Oswald] text-[11px] tracking-[1.5px] uppercase text-[#969696] mt-0.5">
-                {alt.requestedSizes.join(' · ')}
-              </p>
+            const containerClass = isAccepted
+              ? 'bg-[#43a200]/5 border-2 border-[#43a200]'
+              : isDenied
+                ? 'bg-[#e51940]/5 border-2 border-[#e51940]'
+                : 'bg-[#b28a2c]/5 border-2 border-[#b28a2c]';
 
-              {alt.stockOverride && (
-                <p className="font-[Oswald] text-[9px] tracking-[1.5px] uppercase text-[#e51940] mt-1">
-                  ⚠ Article hors stock
+            const badgeLabel = isAccepted
+              ? 'Alternative acceptée'
+              : isDenied
+                ? 'Alternative refusée'
+                : 'Alternative proposée';
+
+            const badgeColor = isAccepted
+              ? 'text-[#43a200]'
+              : isDenied
+                ? 'text-[#e51940]'
+                : 'text-[#b28a2c]';
+
+            return (
+              <div key={alt.id} className={`px-3 py-3 mb-3 ${containerClass}`}>
+                <p className={`font-[Oswald] text-[9px] tracking-[2px] uppercase mb-1 ${badgeColor}`}>
+                  {badgeLabel}
                 </p>
-              )}
-
-              {alt.status === RequestLineStatus.AlternativeProposed && onRespondAlternative && (
-                <div className="flex gap-2 mt-3">
-                  <button
-                    type="button"
-                    onClick={() => onRespondAlternative({ alternativeLineId: alt.id, accepted: true })}
-                    className="flex-1 py-2 bg-[#121212] font-[Oswald] text-[11px] tracking-[2px] uppercase text-white min-h-11"
-                  >
-                    Accepter
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onRespondAlternative({ alternativeLineId: alt.id, accepted: false })}
-                    className="flex-1 py-2 border border-[#e51940] font-[Oswald] text-[11px] tracking-[2px] uppercase text-[#e51940] min-h-11"
-                  >
-                    Refuser
-                  </button>
-                </div>
-              )}
-
-              {alt.status === RequestLineStatus.AlternativeDenied && (
-                <p className="font-[Oswald] text-[10px] tracking-[1.5px] uppercase text-[#e51940] mt-2">
-                  Refusée
+                <p className="font-['Libre_Baskerville'] text-[13px] text-[#121212]">
+                  {alt.articleName}
                 </p>
-              )}
-              {alt.status === RequestLineStatus.Found && (
-                <p className="font-[Oswald] text-[10px] tracking-[1.5px] uppercase text-[#43a200] mt-2">
-                  Acceptée
+                <p className="font-[Oswald] text-[11px] tracking-[1.5px] uppercase text-[#969696] mt-0.5">
+                  {alt.articleColorOrPrint}
                 </p>
-              )}
-            </div>
-          ))}
+                <p className="font-[Oswald] text-[11px] tracking-[1.5px] uppercase text-[#969696] mt-0.5">
+                  {alt.requestedSizes.join(' · ')}
+                </p>
+                {alt.stockOverride && (
+                  <p className="font-[Oswald] text-[9px] tracking-[1.5px] uppercase text-[#e51940] mt-1">
+                    ⚠ Article hors stock
+                  </p>
+                )}
+                {alt.status === RequestLineStatus.AlternativeProposed && onRespondAlternative && (
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      type="button"
+                      onClick={() => onRespondAlternative({ alternativeLineId: alt.id, accepted: true })}
+                      className="flex-1 py-2 bg-[#121212] font-[Oswald] text-[11px] tracking-[2px] uppercase text-white min-h-[44px]"
+                    >
+                      Accepter
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onRespondAlternative({ alternativeLineId: alt.id, accepted: false })}
+                      className="flex-1 py-2 border border-[#e51940] font-[Oswald] text-[11px] tracking-[2px] uppercase text-[#e51940] min-h-[44px]"
+                    >
+                      Refuser
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 

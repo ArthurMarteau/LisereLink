@@ -181,7 +181,7 @@ public class RequestServiceTests
         _repository.GetByIdAsync(request.Id, Arg.Any<CancellationToken>())
             .Returns(request);
 
-        var dto = new UpdateRequestDto { Status = RequestStatus.Delivered };
+        var dto = new UpdateRequestDto { Status = RequestStatus.Processed };
 
         await Assert.ThrowsAsync<BusinessException>(() => _sut.UpdateAsync(request.Id, dto));
         await _repository.DidNotReceive().UpdateAsync(Arg.Any<Request>(), Arg.Any<CancellationToken>());
@@ -308,7 +308,7 @@ public class RequestServiceTests
                 ArticleName         = "Manteau Test",
                 ArticleColorOrPrint = "Noir",
                 ArticleBarcode      = "1234567890123",
-                RequestedSizes      = [size],
+                Size                = size,
                 Quantity            = 1,
             }
         ]
