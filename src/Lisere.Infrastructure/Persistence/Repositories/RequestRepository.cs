@@ -66,7 +66,8 @@ public class RequestRepository : IRequestRepository
 
     public async Task UpdateAsync(Request request, CancellationToken cancellationToken = default)
     {
-        _context.Requests.Update(request);
+        // L'entité est déjà trackée par le même DbContext (chargée via GetByIdAsync)
+        // EF Core détecte automatiquement les changements — SaveChanges suffit
         await _context.SaveChangesAsync(cancellationToken);
     }
 

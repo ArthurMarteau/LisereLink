@@ -143,8 +143,11 @@ public class RequestService : IRequestService
         var request = await _requestRepository.GetByIdAsync(requestId, cancellationToken)
             ?? throw new KeyNotFoundException($"Demande {requestId} introuvable.");
 
+        if (request.Status == RequestStatus.InProgress && request.StockistId == stockistId)
+            return request.ToDto(); // Idempotent — déjà pris en charge par ce stockiste
+
         if (request.Status != RequestStatus.Pending)
-            throw new BusinessException("Seules les demandes en attente peuvent être prises en charge.");
+            throw new BusinessException("Cette demande est déjà prise en charge.");
 
         request.StockistId = stockistId;
         request.Status = RequestStatus.InProgress;

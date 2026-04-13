@@ -17,6 +17,10 @@ import SellerHistoryPage from '@/pages/seller/HistoryPage';
 import QueuePage from '@/pages/stockist/QueuePage';
 import InProgressPage from '@/pages/stockist/InProgressPage';
 import StockistHistoryPage from '@/pages/stockist/HistoryPage';
+import RequestDetailPage from '@/pages/stockist/RequestDetailPage';
+import StockistSearchPage from '@/pages/stockist/StockistSearchPage';
+import StockistScanPage from '@/pages/stockist/StockistScanPage';
+import StockistArticleDetailPage from '@/pages/stockist/StockistArticleDetailPage';
 import AdminStockPage from '@/pages/admin/StockPage';
 import CataloguePage from '@/pages/admin/CataloguePage';
 import AdminRequestsPage from '@/pages/admin/RequestsPage';
@@ -52,8 +56,12 @@ export default function AppRouter() {
         <Route element={<ProtectedRoute role={UserRole.Stockist} />}>
           <Route element={<StockistLayout />}>
             <Route path="/queue" element={<QueuePage />} />
+            <Route path="/queue/:id" element={<RequestDetailPage />} />
             <Route path="/in-progress" element={<InProgressPage />} />
             <Route path="/stockist-history" element={<StockistHistoryPage />} />
+            <Route path="/stockist-search" element={<StockistSearchPage />} />
+            <Route path="/stockist-scan" element={<StockistScanPage />} />
+            <Route path="/stockist-article/:id" element={<StockistArticleDetailPage />} />
           </Route>
         </Route>
 

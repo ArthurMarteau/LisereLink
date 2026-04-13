@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Lisere.Application.Common;
 using Lisere.Application.DTOs;
 using Lisere.Application.Interfaces;
@@ -6,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
 namespace Lisere.API.Controllers;
+
+public record TakeRequestDto([Required] Guid StockistId);
 
 [ApiController]
 [Route("api/[controller]")]
@@ -91,10 +94,10 @@ public class RequestsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<RequestDto>> Take(
         Guid id,
-        [FromQuery] Guid stockistId,
+        [FromBody] TakeRequestDto dto,
         CancellationToken cancellationToken = default)
     {
-        var request = await _requestService.TakeInProgressAsync(id, stockistId, cancellationToken);
+        var request = await _requestService.TakeInProgressAsync(id, dto.StockistId, cancellationToken);
         return Ok(request);
     }
 

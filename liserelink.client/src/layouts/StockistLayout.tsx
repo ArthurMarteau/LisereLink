@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useRequestStore } from '@/stores/useRequestStore';
 import { startConnection, stopConnection } from '@/services/signalRClient';
@@ -8,6 +9,7 @@ import ZoneChip from '@/components/ui/ZoneChip';
 import ZoneSelectorModal from '@/pages/ZoneSelectorModal';
 
 export default function StockistLayout() {
+  const navigate = useNavigate();
   const selectedStoreName = useAuthStore((s) => s.selectedStoreName);
   const selectedZone = useAuthStore((s) => s.selectedZone);
   const pendingCount = useRequestStore((s) => s.selectPendingRequests().length);
@@ -30,6 +32,14 @@ export default function StockistLayout() {
         <div className="flex items-center gap-3 shrink-0">
           <ZoneChip onClick={() => setIsModalOpen(true)} />
           <SignalRBadge />
+          <button
+            type="button"
+            onClick={() => { useAuthStore.getState().logout(); navigate('/login'); }}
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Déconnexion"
+          >
+            <LogOut size={18} className="text-white" />
+          </button>
         </div>
       </header>
 
